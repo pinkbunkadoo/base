@@ -10,10 +10,13 @@ html body {
 
 .stage {
   position: relative;
+  width: 600px;
+  height: 400px;
+  margin: auto;
   border: 1px solid red;
 }
 
-.fragment {
+.stage-object {
   position: absolute;
   border: 1px solid blue;
 }

@@ -1,9 +1,24 @@
-import Fragment from './fragment';
+import StageObject from './stage_object';
 
-class Text extends Fragment {
+class Text extends StageObject {
   constructor(params={}) {
     super(params);
-    this.text = params.text;
+    this.setSize(params.size || 48);
+    this.setText(params.value);
+  }
+
+  setSize(value) {
+    this.size = value;
+    this.el.style.fontSize = this.size + 'px';
+  }
+
+  setText(value) {
+    this.value = value;
+    this.el.innerHTML = this.value;
+  }
+
+  addedToStage() {
+    super.addedToStage();
   }
 }
 

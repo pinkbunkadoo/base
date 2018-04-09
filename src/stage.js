@@ -1,15 +1,16 @@
 
 class Stage {
-  constructor(params) {
+  constructor(params={}) {
     this.el = document.createElement('div');
     this.el.classList.add('stage');
     this.children = [];
   }
 
-  add(fragment) {
-    this.children.push(fragment);
-    this.el.appendChild(fragment.el);
+  add(stageObject) {
+    this.children.push(stageObject);
+    this.el.appendChild(stageObject.el);
+    stageObject.addedToStage();
   }
 }
 
-module.exports = Stage;
+export default Stage;
