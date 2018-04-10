@@ -1,12 +1,11 @@
+import { Event, EventDispatcher } from './events';
 
-class StageObject {
+class StageObject extends EventDispatcher {
   constructor(params={}) {
+    super();
     this.el = document.createElement('div');
     this.el.classList.add('stage-object');
-    this.setPosition(params.x||0, params.y||0);
-    // this.el.classList.add('fragment');
-    // this.el.appendChild(document.createTextNode(this.text));
-    //
+    this.setPosition(params.x || 0, params.y || 0);
   }
 
   setPosition(x, y) {
@@ -17,7 +16,7 @@ class StageObject {
   }
 
   addedToStage() {
-    console.log('added');
+    this.emit('hey', new Event('hey', { num: 1 }));
   }
 }
 
