@@ -1,6 +1,6 @@
 
 import Stage from './stage';
-import Text from './text';
+import TextObject from './text_object';
 
 class App {
   constructor() {
@@ -10,7 +10,7 @@ class App {
   startup() {
     console.log('startup');
 
-    let label = new Text({ value: 'hello', x: 50, y: 100 });
+    let label = new TextObject({ value: 'hello', x: 50, y: 100 });
 
     label.on('hey', (event) => {
     });
@@ -38,7 +38,7 @@ class App {
   }
 
   onKeyDown(event) {
-    console.log(event.key);
+    // console.log(event.key);
   }
 
   handleEvent(event) {

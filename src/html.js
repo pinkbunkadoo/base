@@ -18,13 +18,13 @@ class Html {
     return this;
   }
 
-  on(eventType, callback) {
-    this.el.addEventListener(eventType, callback);
+  on(eventName, callback) {
+    this.el.addEventListener(eventName, callback);
     return this;
   }
 
-  dataset(prop, value) {
-    this.el.dataset[prop] = value;
+  data(name, value) {
+    this.el.dataset[name] = value;
     return this;
   }
 
