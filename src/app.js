@@ -1,6 +1,7 @@
 
 import Stage from './stage';
 import TextObject from './text_object';
+import Paper from './paper';
 
 class App {
   constructor() {
@@ -35,10 +36,40 @@ class App {
     this.stage = new Stage();
     this.dom.app.appendChild(this.stage.el);
 
+    this.paper = new Paper({ visible: false });
+    this.dom.app.appendChild(this.paper.el);
+
+    this.paper.on('shape', (points) => {
+      // console.log('shape', points);
+      this.createShape(points);
+      this.togglePaper();
+    });
+  }
+
+  togglePaper() {
+    if (this.mode !== 'paper') {
+      this.paper.setVisible(true);
+      this.paper.clear();
+      this.mode = 'paper';
+    }
+    else {
+      this.paper.setVisible(false);
+      this.mode = null;
+    }
+  }
+
+  createShape(points) {
+
   }
 
   onKeyDown(event) {
-    // console.log(event.key);
+    if (event.key == 'd' && !event.repeat) {
+      this.togglePaper();
+    } else {
+      if (this.mode == 'paper') {
+        this.paper.handleEvent(event);
+      }
+    }
   }
 
   handleEvent(event) {
