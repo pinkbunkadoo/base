@@ -1,6 +1,7 @@
-
+import svg from './svg';
 import Stage from './stage';
-import TextObject from './text_object';
+import Shape from './display/shape';
+import Text from './display/text';
 import Paper from './paper';
 
 class App {
@@ -11,7 +12,7 @@ class App {
   startup() {
     console.log('startup');
 
-    let label = new TextObject({ value: 'hello', x: 50, y: 100 });
+    let label = new Text({ value: 'hello', x: 50, y: 100 });
 
     label.on('hey', (event) => {
     });
@@ -39,31 +40,57 @@ class App {
     this.paper = new Paper({ visible: false });
     this.dom.app.appendChild(this.paper.el);
 
-    this.paper.on('shape', (points) => {
-      // console.log('shape', points);
-      this.createShape(points);
-      this.togglePaper();
+    this.paper.on('paths', (paths) => {
+      this.createShape(paths);
+      this.hidePaper();
     });
   }
 
-  togglePaper() {
+  showPaper() {
     if (this.mode !== 'paper') {
       this.paper.setVisible(true);
       this.paper.clear();
       this.mode = 'paper';
     }
-    else {
+  }
+
+  hidePaper() {
+    if (this.mode == 'paper') {
       this.paper.setVisible(false);
       this.mode = null;
     }
   }
 
-  createShape(points) {
-
+  togglePaper() {
+    if (this.mode !== 'paper') {
+      this.showPaper();
+    }
+    else {
+      this.hidePaper();
+    }
   }
 
+  createShape(paths) {
+    let shape = new Shape(paths);
+    this.stage.add(shape);
+    // return shape.dom();
+  }
+
+  // createShape(points) {
+  //   let ps = '';
+  //   for (var i = 0; i < points.length; i++) {
+  //     ps += points[i].x + ' ' + points[i].y + ' ';
+  //   }
+  //   ps += 'Z';
+  //   return svg.element('polygon', { points: ps });
+  // }
+  //
+  // createShapes(shapes) {
+  //   // document.body.appendChild(div);
+  // }
+
   onKeyDown(event) {
-    if (event.key == 'd' && !event.repeat) {
+    if (event.key == 'p' && !event.repeat) {
       this.togglePaper();
     } else {
       if (this.mode == 'paper') {

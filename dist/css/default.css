@@ -10,11 +10,13 @@ html body {
 
 .stage {
   position: relative;
-  width: 320px;
-  height: 200px;
-  margin: auto;
-  border: 1px solid red;
-  box-sizing: border-box;
+  /* width: 320px; */
+  /* height: 200px; */
+  /* margin: auto; */
+  /* border: 1px solid red; */
+  width: 100vw;
+  height: 100vh;
+  /* box-sizing: border-box; */
 }
 
 .stage-object {

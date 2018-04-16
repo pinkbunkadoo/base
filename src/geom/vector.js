@@ -12,6 +12,18 @@ class Vector {
   mag() {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }
+
+  project(vector) {
+    let d = vector.dot(vector);
+    if (d > 0) {
+      let ratio = this.dot(vector) / d;
+      // return new Vector(vector.x * ratio, vector.y * ratio);
+      if (ratio >= 0 && ratio <= 1) {
+        return new Vector(vector.x * ratio, vector.y * ratio);
+      }
+    }
+    return null;
+  }
 }
 
 export default Vector;

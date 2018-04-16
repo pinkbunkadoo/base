@@ -12,7 +12,7 @@ class Stage {
 
   add(stageObject) {
     this.children.push(stageObject);
-    this.el.appendChild(stageObject.el);
+    this.el.appendChild(stageObject.dom());
     stageObject.addedToStage();
   }
 

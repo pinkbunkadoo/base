@@ -1,13 +1,18 @@
-import { Event, EventDispatcher } from './events';
+import { Event, EventDispatcher } from '../events';
 
 class StageObject extends EventDispatcher {
   constructor(params={}) {
     super();
     this.el = document.createElement('div');
     this.el.classList.add('stage-object');
+    
     this.setPosition(params.x || 0, params.y || 0);
 
     this.el.addEventListener('mousedown', this);
+  }
+
+  dom() {
+    return this.el;
   }
 
   setPosition(x, y) {

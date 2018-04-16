@@ -1,6 +1,6 @@
 import StageObject from './stage_object';
 
-class TextObject extends StageObject {
+class Text extends StageObject {
   constructor(params={}) {
     super(params);
     this.setSize(params.size || 48);
@@ -22,4 +22,4 @@ class TextObject extends StageObject {
   }
 }
 
-export default TextObject;
+export default Text;

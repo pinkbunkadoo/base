@@ -1,5 +1,7 @@
 import { EventDispatcher } from './events';
 import util from './util';
+import Point from './geom/point';
+import Vector from './geom/vector';
 import Circle from './geom/circle';
 
 class Paper extends EventDispatcher {
@@ -7,6 +9,7 @@ class Paper extends EventDispatcher {
     super();
 
     this.points = [];
+    this.paths = [];
 
     this.el = document.createElement('div');
     this.el.classList.add('paper');
@@ -16,21 +19,34 @@ class Paper extends EventDispatcher {
 
     this.el.appendChild(this.canvas);
 
-    this.el.addEventListener('mousedown', this);
-    this.el.addEventListener('mousemove', this);
-    this.el.addEventListener('mouseup', this);
-    this.el.addEventListener('dblclick', this);
-    this.el.addEventListener('contextmenu', this);
-
     this.setVisible(params.visible !== undefined ? params.visible : true);
 
-    // this.circle = { x: 0, y: 0, r: 80 };
-    // this.line = { x1: 10, y1: 50, x2: 100, y2: 50 };
-    //
-    // util.circleLineIntersection(
-    //   this.circle.x, this.circle.y, this.circle.r,
-    //   this.line.x1, this.line.y1, this.line.x2, this.line.y2
-    // );
+    this.listeners = [ 'mousedown', 'mousemove', 'mouseup', 'dblclick', 'contextmenu' ];
+  }
+
+  addListeners() {
+    for (var i = 0; i < this.listeners.length; i++) {
+      window.addEventListener(this.listeners[i], this);
+    }
+  }
+
+  removeListeners() {
+    for (var i = 0; i < this.listeners.length; i++) {
+      window.removeEventListener(this.listeners[i], this);
+    }
+  }
+
+  setVisible(visible) {
+    if (this.visible !== visible) {
+      this.visible = visible;
+      if (this.visible) {
+        this.el.style.display = 'block';
+        this.addListeners();
+      } else {
+        this.el.style.display = 'none';
+        this.removeListeners();
+      }
+    }
   }
 
   adjustCanvas() {
@@ -38,38 +54,41 @@ class Paper extends EventDispatcher {
     this.canvas.height = window.innerHeight;
   }
 
-  setVisible(visible) {
-    this.visible = visible;
-    if (this.visible)
-      this.el.style.display = 'block';
-    else
-      this.el.style.display = 'none';
+  drawLine(x1, y1, x2, y2, color) {
+    let ctx = this.canvas.getContext('2d');
+    ctx.strokeStyle = color || 'black';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
   }
 
-  render() {
+  drawPath(points, color) {
     let ctx = this.canvas.getContext('2d');
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.strokeStyle = 'red';
+    ctx.strokeStyle = color || 'black';
     ctx.beginPath();
-    for (var i = 0; i < this.points.length; i++) {
-      let p = this.points[i];
+    for (var i = 0; i < points.length; i++) {
+      let p = points[i];
       if (i == 0)
         ctx.moveTo(p.x, p.y);
       else
         ctx.lineTo(p.x, p.y);
     }
     ctx.stroke();
+  }
 
-    ctx.beginPath();
-    ctx.arc(this.cursorX, this.cursorY, 25, 0, Math.PI * 2, false);
-    ctx.stroke();
+  render() {
+    let ctx = this.canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // ctx.beginPath();
-    // ctx.moveTo(this.line.x1, this.line.y1);
-    // ctx.lineTo(this.line.x2, this.line.y2);
-    // ctx.stroke();
+    for (let i = 0; i < this.paths.length; i++) {
+      let path = this.paths[i];
+      this.drawPath(path.points);
+    }
 
     if (this.points.length) {
+      this.drawPath(this.points, 'red');
+
       ctx.strokeStyle = 'blue';
       ctx.beginPath();
       let p = this.points[this.points.length - 1];
@@ -78,40 +97,43 @@ class Paper extends EventDispatcher {
       ctx.stroke();
     }
 
-    let line = { x1: 100, y1: 60, x2: 150, y2: 120 };
-
-    ctx.beginPath();
-    ctx.moveTo(line.x1, line.y1);
-    ctx.lineTo(line.x2, line.y2);
-    ctx.stroke();
-
-    let line2 = { x1: 100, y1: 60, x2: this.cursorX, y2: this.cursorY };
-    ctx.beginPath();
-    ctx.moveTo(line2.x1, line2.y1);
-    ctx.lineTo(line2.x2, line2.y2);
-    ctx.stroke();
-
+    // let cursor = new Point(this.cursorX, this.cursorY);
+    // let radius = 10;
+    // let line = { x1: 150, y1: 200, x2: 200, y2: 300 };
+    //
+    // let vec1 = new Vector(line.x2 - line.x1, line.y2 - line.y1);
+    // let vec2 = new Vector(cursor.x - line.x1, cursor.y - line.y1);
+    // let vec3 = vec2.project(vec1);
+    //
+    // this.drawLine(line.x1, line.y1, line.x2, line.y2);
+    // this.drawLine(line.x1, line.y1, cursor.x, cursor.y);
+    // if (vec3) {
+    //   let p = new Point(line.x1 + vec3.x, line.y1 + vec3.y);
+    //   if (cursor.distance(p) < radius) {
+    //     ctx.strokeStyle = 'green';
+    //     ctx.beginPath();
+    //     ctx.arc(p.x, p.y, 2, 0, Math.PI * 2, false);
+    //     ctx.stroke();
+    //   }
+    // }
   }
 
   clear() {
     this.points = [];
+    this.paths = [];
     this.render();
   }
 
-  closeShape() {
-    this.emit('shape', this.points);
+  closePath() {
+    this.paths.push({ points: this.points });
+    this.points = [];
     this.render();
   }
 
   onMouseDown(event) {
-    // console.log(event.button);
     if (event.button == 0) {
       this.points.push({ x: event.offsetX, y: event.offsetY });
-      // this.render();
     }
-    // else if (event.button == 2) {
-    //   this.closeShape();
-    // }
   }
 
   onMouseUp(event) {
@@ -124,14 +146,16 @@ class Paper extends EventDispatcher {
   }
 
   onDblClick(event) {
-    this.closeShape();
+    this.closePath();
   }
 
   onKeyDown(event) {
-    if (event.key == 'Escape') {
-      this.closeShape();
+    if (event.key == 'Escape' && !event.repeat) {
+      this.emit('paths', this.paths);
     }
-    // console.log(event.key);
+    else if (event.key == 'Enter' && !event.repeat) {
+      this.closePath();
+    }
   }
 
   onContextMenu(event) {
