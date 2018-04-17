@@ -16,10 +16,6 @@ class Text extends StageObject {
     this.value = value;
     this.el.innerHTML = this.value;
   }
-
-  addedToStage() {
-    super.addedToStage();
-  }
 }
 
 export default Text;

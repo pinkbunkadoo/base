@@ -22,6 +22,11 @@ class Paper extends EventDispatcher {
     this.setVisible(params.visible !== undefined ? params.visible : true);
 
     this.listeners = [ 'mousedown', 'mousemove', 'mouseup', 'dblclick', 'contextmenu' ];
+
+    this.cursor = document.createElement('div');
+    this.cursor.classList.add('paper-cursor');
+
+    this.el.appendChild(this.cursor);
   }
 
   addListeners() {
@@ -143,6 +148,8 @@ class Paper extends EventDispatcher {
     this.cursorX = event.offsetX;
     this.cursorY = event.offsetY;
     this.render();
+    this.cursor.style.left = this.cursorX + 'px';
+    this.cursor.style.top = this.cursorY + 'px';
   }
 
   onDblClick(event) {

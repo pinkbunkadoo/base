@@ -13,9 +13,10 @@ class App {
     console.log('startup');
 
     let label = new Text({ value: 'hello', x: 50, y: 100 });
+    label.on('hey', (event) => {});
 
-    label.on('hey', (event) => {
-    });
+    let path = [ { points: [ ] } ];
+    let shape = new Shape({ paths: paths });
 
     this.stage.add(label);
   }

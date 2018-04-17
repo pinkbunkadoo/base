@@ -3,29 +3,38 @@ import { Event, EventDispatcher } from '../events';
 class StageObject extends EventDispatcher {
   constructor(params={}) {
     super();
-    this.el = document.createElement('div');
-    this.el.classList.add('stage-object');
-    
+    // this.el = this.dom();
     this.setPosition(params.x || 0, params.y || 0);
-
-    this.el.addEventListener('mousedown', this);
   }
 
   dom() {
-    return this.el;
+    let el = document.createElement('div');
+    el.classList.add('stage-object');
+    el.style.left = this.x + 'px';
+    el.style.top = this.y + 'px';
+    el.addEventListener('mousedown', this);
+    return el;
   }
 
   setPosition(x, y) {
     this.x = x;
     this.y = y;
-    this.el.style.left = this.x + 'px';
-    this.el.style.top = this.y + 'px';
+    // this.el.style.left = this.x + 'px';
+    // this.el.style.top = this.y + 'px';
   }
 
   addedToStage() {
-    this.emit('hey', new Event('hey', { num: 1 }));
+    // this.emit('hey', new Event('hey', { num: 1 }));
   }
 
+  // select() {
+  //   this.el.classList.add('selected');
+  // }
+  //
+  // deselect() {
+  //   this.el.classList.remove('selected');
+  // }
+  //
   beginDrag() {
     window.addEventListener('mouseup', this);
     window.addEventListener('mousemove', this);
@@ -41,7 +50,9 @@ class StageObject extends EventDispatcher {
   }
 
   onMouseDown(event) {
+    this.emit('mousedown', this);
     this.beginDrag();
+    // console.log(event.target);
   }
 
   onMouseUp(event) {
@@ -49,12 +60,11 @@ class StageObject extends EventDispatcher {
   }
 
   onMouseMove(event) {
+    let el = event.target;
     if (this.drag) {
       this.setPosition(this.x + event.movementX, this.y + event.movementY);
-    } else {
-      // if (event.button == 0) {
-      //   console.log('left');
-      // }
+      el.style.left = this.x + 'px';
+      el.style.top = this.y + 'px';
     }
   }
 

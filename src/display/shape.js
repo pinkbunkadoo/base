@@ -4,8 +4,9 @@ import Rectangle from '../geom/rectangle';
 import StageObject from './stage_object';
 
 class Shape extends StageObject {
-  constructor(paths) {
-    super();
+  constructor(params={}) {
+    super(params);
+
     this.paths = [];
 
     for (var i = 0; i < paths.length; i++) {
@@ -34,46 +35,49 @@ class Shape extends StageObject {
         ymin = p.y < ymin ? p.y : ymin;
       }
     }
+
+    if (xmax == Number.NEGATIVE_INFINITY ||
+      xmin == Number.POSITIVE_INFINITY ||
+      ymax == Number.NEGATIVE_INFINITY ||
+      ymin == Number.POSITIVE_INFINITY)
+      return null;
+
     return new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
   }
 
-  createPolygonElement(points) {
-  }
-
   dom() {
+    let el = super.dom();
+
     let bounds = this.getBounds();
 
-    // let div = document.createElement('div');
-    // div.style.position = 'absolute';
+    if (bounds) {
+      this.setPosition(bounds.x, bounds.y);
 
-    // this.el.style.left = bounds.x + 'px';
-    // this.el.style.top = bounds.y + 'px';
+      el.style.width = bounds.width + 'px';
+      el.style.height = bounds.height + 'px';
 
-    this.setPosition(bounds.x, bounds.y);
+      let svgEl = svg.svg();
+      svgEl.setAttribute('width', bounds.width);
+      svgEl.setAttribute('height', bounds.height);
+      svgEl.setAttribute('viewBox', '0 0 ' + bounds.width + ' ' + bounds.height);
 
-    this.el.style.width = bounds.width + 'px';
-    this.el.style.height = bounds.height + 'px';
+      for (var i = 0; i < this.paths.length; i++) {
+        let path = this.paths[i];
+        let ps = '';
+        for (var j = 0; j < path.points.length; j++) {
+          let p = path.points[j];
+          ps += (p.x - bounds.x) + ' ' + (p.y - bounds.y) + ' ';
+        }
+        ps += 'Z';
 
-    let svgEl = svg.svg();
-    svgEl.setAttribute('width', bounds.width);
-    svgEl.setAttribute('height', bounds.height);
-    svgEl.setAttribute('viewBox', '0 0 ' + bounds.width + ' ' + bounds.height);
-
-    for (var i = 0; i < this.paths.length; i++) {
-      let path = this.paths[i];
-      let ps = '';
-      for (var j = 0; j < path.points.length; j++) {
-        let p = path.points[j];
-        ps += (p.x - bounds.x) + ' ' + (p.y - bounds.y) + ' ';
+        let svgChildEl = svg.element('polygon', { points: ps, fill: 'transparent', stroke: 'black' });
+        svgEl.appendChild(svgChildEl);
       }
-      ps += 'Z';
-      let el = svg.element('polygon', { points: ps });
-
-      svgEl.appendChild(el);
+      el.appendChild(svgEl);
     }
-    this.el.appendChild(svgEl);
 
-    return this.el;
+    this.el = el;
+    return el;
   }
 }
 
