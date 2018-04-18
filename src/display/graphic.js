@@ -9,6 +9,8 @@ class Graphic extends StageObject {
 
     this.shapes = params.shapes || [];
 
+    this.el.style.pointerEvents = 'none';
+
     this.update();
   }
 
@@ -52,7 +54,7 @@ class Graphic extends StageObject {
     if (bounds) {
       this.x = bounds.x;
       this.y = bounds.y;
-      // this.setPosition(bounds.x, bounds.y);
+
       this.el.style.width = bounds.width + 'px';
       this.el.style.height = bounds.height + 'px';
 
@@ -60,24 +62,34 @@ class Graphic extends StageObject {
       svgEl.setAttribute('width', bounds.width);
       svgEl.setAttribute('height', bounds.height);
       svgEl.setAttribute('viewBox', '0 0 ' + bounds.width + ' ' + bounds.height);
+      svgEl.setAttribute('pointer-events', 'none');
 
       for (var i = 0; i < this.shapes.length; i++) {
         let shape = this.shapes[i];
-        let ps = '';
+
+        let ps = 'M';
+
         for (var j = 0; j < shape.points.length; j++) {
           let p = shape.points[j];
-          ps += (p.x - bounds.x) + ',' + (p.y - bounds.y) + ' ';
+          if (j > 0) ps += 'L';
+          ps += (p.x - bounds.x) + ' ' + (p.y - bounds.y) + ' ';
         }
         if (shape.closed) {
           ps += 'Z';
         }
 
-        let svgChildEl = svg.element('polyline', { points: ps, fill: 'transparent', stroke: 'black' });
-        svgEl.appendChild(svgChildEl);
+        console.log('fill', shape.fill);
+
+        let g = svg.element('g');
+        // g.setAttribute('pointer-events', shape.fill ? 'visiblePainted' : 'visibleStroke');
+        g.setAttribute('pointer-events', 'painted');
+        let path = svg.element('path', { d: ps, fill: (shape.fill ? shape.fill : 'none'), stroke: shape.stroke });
+        path.setAttribute('stroke-width', 3);
+        g.appendChild(path);
+
+        svgEl.appendChild(g);
       }
       this.el.appendChild(svgEl);
-
-      // this.x = bounds.x;
     }
   }
 }

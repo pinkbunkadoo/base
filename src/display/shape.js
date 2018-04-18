@@ -13,8 +13,8 @@ class Shape {
       }
     }
 
-    this.fill = params.fill || 'transparent';
-    this.stroke = params.stroke || 'black';
+    this.fill = params.fill || null;
+    this.stroke = params.stroke || null;
     this.strokeWidth = params.strokeWidth || 1;
     this.closed = params.closed || false;
 

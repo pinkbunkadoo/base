@@ -5,6 +5,19 @@ import Circle from './geom/circle';
 import Shape from './display/shape';
 
 let SNAP_RADIUS = 3;
+let COLORS = [
+  'white',
+  // '#e6e6e6',
+  '#cccccc',
+  // '#b3b3b3',
+  '#999999',
+  // '#808080',
+  '#666666',
+  // '#4d4d4d',
+  '#333333',
+  // '#1a1a1a',
+  'black'
+];
 
 class Paper extends EventDispatcher {
   constructor(params={}) {
@@ -12,8 +25,8 @@ class Paper extends EventDispatcher {
 
     this.points = [];
     this.shapes = [];
-    this.fill = 'cyan';
-    this.stroke = 'green';
+    this.fill = null;
+    this.stroke = COLORS[5];
 
     this.el = document.createElement('div');
     this.el.classList.add('paper');
@@ -72,10 +85,15 @@ class Paper extends EventDispatcher {
     ctx.stroke();
   }
 
-  drawPath(points, closed=false) {
+  drawPath(params={}) {
+    let points = params.points || [];
     let ctx = this.canvas.getContext('2d');
-    ctx.strokeStyle = this.stroke;
-    ctx.fillStyle = this.fill;
+
+    ctx.save();
+
+    ctx.strokeStyle = params.stroke !== undefined ? (params.stroke ? params.stroke : 'transparent') : 'transparent';
+    ctx.fillStyle = params.fill !== undefined ? (params.fill ? params.fill : 'transparent') : 'transparent';
+
     ctx.beginPath();
     for (var i = 0; i < points.length; i++) {
       let p = points[i];
@@ -84,9 +102,11 @@ class Paper extends EventDispatcher {
       else
         ctx.lineTo(p.x, p.y);
     }
-    if (closed) ctx.closePath();
+    if (params.closed) ctx.closePath();
     ctx.fill();
     ctx.stroke();
+
+    ctx.restore();
   }
 
   render() {
@@ -95,11 +115,11 @@ class Paper extends EventDispatcher {
 
     for (let i = 0; i < this.shapes.length; i++) {
       let shape = this.shapes[i];
-      this.drawPath(shape.points, shape.closed);
+      this.drawPath({ points: shape.points, fill: shape.fill, stroke: shape.stroke, closed: shape.closed });
     }
 
     if (this.points.length) {
-      this.drawPath(this.points);
+      this.drawPath({ points: this.points, fill: this.fill, stroke: this.stroke });
 
       ctx.strokeStyle = 'blue';
       ctx.beginPath();
@@ -115,6 +135,13 @@ class Paper extends EventDispatcher {
         ctx.stroke();
       }
     }
+
+    // if (this.command) {
+    //   // console.log(this.command);
+    //   let size = 24;
+    //   ctx.font = size + 'px sans-serif';
+    //   ctx.fillText(this.command, this.canvas.width / 2, this.canvas.height - size*2);
+    // }
 
   }
 
@@ -135,10 +162,21 @@ class Paper extends EventDispatcher {
 
   closePath(closed=false) {
     if (this.points.length > 1) {
-      let shape = new Shape({ points: this.points, closed: closed });
+      let shape = new Shape({ points: this.points, closed: closed, fill: this.fill, stroke: this.stroke });
       this.shapes.push(shape);
+      // console.log(shape.fill);
     }
     this.points = [];
+    this.render();
+  }
+
+  setFill(fill) {
+    this.fill = fill;
+    this.render();
+  }
+
+  setStroke(stroke) {
+    this.stroke = stroke;
     this.render();
   }
 
@@ -176,12 +214,27 @@ class Paper extends EventDispatcher {
   }
 
   onKeyDown(event) {
-    if (event.key == 'Escape' && !event.repeat) {
-      // this.emit('paths', this.shapes);
-      this.cancelPath();
+    if (this.command) {
+      this.onParameter(event.key);
     }
-    else if (event.key == 'Enter' && !event.repeat) {
-      this.closePath();
+    else {
+      if (event.key == 'Escape' && !event.repeat) {
+        this.cancelPath();
+      }
+      else if (event.key == 'Enter' && !event.repeat) {
+        this.closePath();
+      }
+      else if (event.key == 's' && !event.repeat) {
+        this.setStroke(this.stroke ? null : 'black')
+      }
+      else if (event.key == '0' && !event.repeat) {
+        this.setFill(null);
+      }
+      else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key) && !event.repeat) {
+        let color = COLORS[parseInt(event.key) - 1];
+        if (color !== undefined)
+          this.setFill(color);
+      }
     }
   }
 

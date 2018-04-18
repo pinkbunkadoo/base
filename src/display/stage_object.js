@@ -60,6 +60,7 @@ class StageObject extends EventDispatcher {
   }
 
   onMouseDown(event) {
+    console.log(event.target);
     this.emit('mousedown', this);
     this.beginDrag();
   }
