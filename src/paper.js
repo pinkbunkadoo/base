@@ -1,15 +1,19 @@
 import { EventDispatcher } from './events';
-import util from './util';
 import Point from './geom/point';
 import Vector from './geom/vector';
 import Circle from './geom/circle';
+import Shape from './display/shape';
+
+let SNAP_RADIUS = 3;
 
 class Paper extends EventDispatcher {
   constructor(params={}) {
     super();
 
     this.points = [];
-    this.paths = [];
+    this.shapes = [];
+    this.fill = 'cyan';
+    this.stroke = 'green';
 
     this.el = document.createElement('div');
     this.el.classList.add('paper');
@@ -68,9 +72,10 @@ class Paper extends EventDispatcher {
     ctx.stroke();
   }
 
-  drawPath(points, color) {
+  drawPath(points, closed=false) {
     let ctx = this.canvas.getContext('2d');
-    ctx.strokeStyle = color || 'black';
+    ctx.strokeStyle = this.stroke;
+    ctx.fillStyle = this.fill;
     ctx.beginPath();
     for (var i = 0; i < points.length; i++) {
       let p = points[i];
@@ -79,6 +84,8 @@ class Paper extends EventDispatcher {
       else
         ctx.lineTo(p.x, p.y);
     }
+    if (closed) ctx.closePath();
+    ctx.fill();
     ctx.stroke();
   }
 
@@ -86,13 +93,13 @@ class Paper extends EventDispatcher {
     let ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    for (let i = 0; i < this.paths.length; i++) {
-      let path = this.paths[i];
-      this.drawPath(path.points);
+    for (let i = 0; i < this.shapes.length; i++) {
+      let shape = this.shapes[i];
+      this.drawPath(shape.points, shape.closed);
     }
 
     if (this.points.length) {
-      this.drawPath(this.points, 'red');
+      this.drawPath(this.points);
 
       ctx.strokeStyle = 'blue';
       ctx.beginPath();
@@ -100,44 +107,56 @@ class Paper extends EventDispatcher {
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(this.cursorX, this.cursorY);
       ctx.stroke();
+
+      let cp = new Point(this.cursorX, this.cursorY);
+      let p0 = this.points[0];
+      if (cp.distance(p0) < SNAP_RADIUS) {
+        ctx.arc(p0.x, p0.y, 5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
 
-    // let cursor = new Point(this.cursorX, this.cursorY);
-    // let radius = 10;
-    // let line = { x1: 150, y1: 200, x2: 200, y2: 300 };
-    //
-    // let vec1 = new Vector(line.x2 - line.x1, line.y2 - line.y1);
-    // let vec2 = new Vector(cursor.x - line.x1, cursor.y - line.y1);
-    // let vec3 = vec2.project(vec1);
-    //
-    // this.drawLine(line.x1, line.y1, line.x2, line.y2);
-    // this.drawLine(line.x1, line.y1, cursor.x, cursor.y);
-    // if (vec3) {
-    //   let p = new Point(line.x1 + vec3.x, line.y1 + vec3.y);
-    //   if (cursor.distance(p) < radius) {
-    //     ctx.strokeStyle = 'green';
-    //     ctx.beginPath();
-    //     ctx.arc(p.x, p.y, 2, 0, Math.PI * 2, false);
-    //     ctx.stroke();
-    //   }
-    // }
+  }
+
+  getShapes() {
+    return this.shapes;
   }
 
   clear() {
     this.points = [];
-    this.paths = [];
+    this.shapes = [];
     this.render();
   }
 
-  closePath() {
-    this.paths.push({ points: this.points });
+  cancelPath() {
+    this.points = [];
+    this.render();
+  }
+
+  closePath(closed=false) {
+    if (this.points.length > 1) {
+      let shape = new Shape({ points: this.points, closed: closed });
+      this.shapes.push(shape);
+    }
     this.points = [];
     this.render();
   }
 
   onMouseDown(event) {
     if (event.button == 0) {
-      this.points.push({ x: event.offsetX, y: event.offsetY });
+      let p = new Point(event.offsetX, event.offsetY);
+      if (this.points.length) {
+        if (p.distance(this.points[0]) < SNAP_RADIUS) {
+          this.closePath(true);
+        }
+        else {
+          this.points.push(p);
+        }
+      }
+      else {
+        this.points.push(p);
+      }
+      this.render();
     }
   }
 
@@ -158,7 +177,8 @@ class Paper extends EventDispatcher {
 
   onKeyDown(event) {
     if (event.key == 'Escape' && !event.repeat) {
-      this.emit('paths', this.paths);
+      // this.emit('paths', this.shapes);
+      this.cancelPath();
     }
     else if (event.key == 'Enter' && !event.repeat) {
       this.closePath();

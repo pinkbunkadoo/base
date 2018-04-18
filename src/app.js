@@ -1,24 +1,13 @@
 import svg from './svg';
 import Stage from './stage';
-import Shape from './display/shape';
-import Text from './display/text';
 import Paper from './paper';
+import Shape from './display/shape';
+import Graphic from './display/graphic';
+import Text from './display/text';
 
 class App {
   constructor() {
     this.dom = [];
-  }
-
-  startup() {
-    console.log('startup');
-
-    let label = new Text({ value: 'hello', x: 50, y: 100 });
-    label.on('hey', (event) => {});
-
-    let path = [ { points: [ ] } ];
-    let shape = new Shape({ paths: paths });
-
-    this.stage.add(label);
   }
 
   init() {
@@ -41,10 +30,28 @@ class App {
     this.paper = new Paper({ visible: false });
     this.dom.app.appendChild(this.paper.el);
 
-    this.paper.on('paths', (paths) => {
-      this.createShape(paths);
-      this.hidePaper();
-    });
+    // this.paper.on('paths', (paths) => {
+    //   this.createShape(paths);
+    //   this.hidePaper();
+    // });
+  }
+
+  startup() {
+    console.log('startup');
+
+    let label = new Text({ value: 'hello' });
+    label.x = 50;
+    label.y = 100;
+    label.on('hey', (event) => {});
+
+    this.stage.add(label);
+  }
+
+  createGraphic(shapes) {
+    if (shapes.length) {
+      let graphic = new Graphic({ shapes: shapes });
+      this.stage.add(graphic);
+    }
   }
 
   showPaper() {
@@ -57,7 +64,11 @@ class App {
 
   hidePaper() {
     if (this.mode == 'paper') {
+      let shapes = this.paper.getShapes();
+      this.createGraphic(shapes);
+
       this.paper.setVisible(false);
+      this.paper.clear();
       this.mode = null;
     }
   }
@@ -70,25 +81,6 @@ class App {
       this.hidePaper();
     }
   }
-
-  createShape(paths) {
-    let shape = new Shape(paths);
-    this.stage.add(shape);
-    // return shape.dom();
-  }
-
-  // createShape(points) {
-  //   let ps = '';
-  //   for (var i = 0; i < points.length; i++) {
-  //     ps += points[i].x + ' ' + points[i].y + ' ';
-  //   }
-  //   ps += 'Z';
-  //   return svg.element('polygon', { points: ps });
-  // }
-  //
-  // createShapes(shapes) {
-  //   // document.body.appendChild(div);
-  // }
 
   onKeyDown(event) {
     if (event.key == 'p' && !event.repeat) {

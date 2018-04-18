@@ -2,7 +2,7 @@ import StageObject from './stage_object';
 
 class Text extends StageObject {
   constructor(params={}) {
-    super(params);
+    super();
     this.setSize(params.size || 48);
     this.setText(params.value);
   }

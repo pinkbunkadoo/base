@@ -17,13 +17,13 @@ class Stage {
     this.el.appendChild(stageObject.dom());
     stageObject.addedToStage();
     stageObject.on('mousedown', (obj) => {
-      if (this.selection.includes(obj)) {
-        this.selection = this.selection.filter(element => element !== obj);
-        obj.deselect();
-      }
-      // this.deselect();
-      // this.selection = [ obj ];
-      // obj.select();
+      // if (this.selection.includes(obj)) {
+      //   this.selection = this.selection.filter(element => element !== obj);
+      //   obj.deselect();
+      // }
+      this.deselect();
+      this.selection = [ obj ];
+      obj.select();
     });
   }
 
