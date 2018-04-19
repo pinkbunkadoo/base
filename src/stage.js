@@ -11,11 +11,16 @@ class Stage {
     this.canvas.width = 320;
     this.canvas.height = 200;
 
-    this.canvas.addEventListener('mousedown', this);
-    this.canvas.addEventListener('mouseup', this);
-    this.canvas.addEventListener('mousemove', this);
-
     this.el.appendChild(this.canvas);
+
+    this.cursor = document.createElement('div');
+    this.cursor.classList.add('stage-cursor');
+    this.el.appendChild(this.cursor);
+
+    window.addEventListener('mousedown', this);
+    window.addEventListener('mouseup', this);
+    window.addEventListener('mousemove', this);
+
   }
 
   dom() {
@@ -23,9 +28,8 @@ class Stage {
   }
 
   add(stageObject) {
-    console.log('add', stageObject);
+    // console.log('add', stageObject);
     this.children.push(stageObject);
-    // this.el.appendChild(stageObject.dom());
     stageObject.addedToStage();
     // stageObject.on('mousedown', (obj) => {
     //   // if (this.selection.includes(obj)) {
@@ -87,8 +91,11 @@ class Stage {
   }
 
   onMouseMove(event) {
-    this.cursorx = event.offsetX;
-    this.cursory = event.offsetY;
+    this.cursorx = event.pageX - this.el.offsetLeft;
+    this.cursory = event.pageY - this.el.offsetTop;
+
+    this.cursor.style.left = this.cursorx + 'px';
+    this.cursor.style.top = this.cursory + 'px';
   }
 
   handleEvent(event) {

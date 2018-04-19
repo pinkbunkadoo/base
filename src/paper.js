@@ -129,23 +129,16 @@ class Paper extends EventDispatcher {
       ctx.beginPath();
       let p = this.points[this.points.length - 1];
       ctx.moveTo(p.x, p.y);
-      ctx.lineTo(this.cursorX, this.cursorY);
+      ctx.lineTo(this.cursorx, this.cursory);
       ctx.stroke();
 
-      let cp = new Point(this.cursorX, this.cursorY);
+      let cp = new Point(this.cursorx, this.cursory);
       let p0 = this.points[0];
       if (cp.distance(p0) < SNAP_RADIUS) {
         ctx.arc(p0.x, p0.y, 5, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
-
-    // if (this.command) {
-    //   // console.log(this.command);
-    //   let size = 24;
-    //   ctx.font = size + 'px sans-serif';
-    //   ctx.fillText(this.command, this.canvas.width / 2, this.canvas.height - size*2);
-    // }
 
   }
 
@@ -168,7 +161,6 @@ class Paper extends EventDispatcher {
     if (this.points.length > 1) {
       let shape = new Shape({ points: this.points, closed: closed, fill: this.fill, stroke: this.stroke });
       this.shapes.push(shape);
-      // console.log(shape.fill);
     }
     this.points = [];
     this.render();
@@ -206,11 +198,11 @@ class Paper extends EventDispatcher {
   }
 
   onMouseMove(event) {
-    this.cursorX = event.offsetX;
-    this.cursorY = event.offsetY;
+    this.cursorx = event.offsetX;
+    this.cursory = event.offsetY;
     this.render();
-    this.cursor.style.left = this.cursorX + 'px';
-    this.cursor.style.top = this.cursorY + 'px';
+    this.cursor.style.left = this.cursorx + 'px';
+    this.cursor.style.top = this.cursory + 'px';
   }
 
   onDblClick(event) {

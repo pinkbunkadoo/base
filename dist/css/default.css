@@ -13,11 +13,25 @@ html body {
   position: absolute;
   left: 100px;
   top: 100px;
+  cursor: none;
 }
 
 .stage>canvas {
   display: block;
 }
+
+.stage-cursor {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 1);
+  width: 1px;
+  height: 1px;
+  /* margin-left: 0px; */
+  /* margin-top: 0px; */
+  cursor: none;
+  pointer-events: none;
+  z-index: 1000;
+}
+
 
 /* .stage-object {
   position: absolute;
