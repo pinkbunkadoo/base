@@ -65,10 +65,12 @@ class Stage {
   onMouseDown(event) {
     // let x = event.offsetX;
     // let y = event.offsetY;
-    let x = event.clientX;
-    let y = event.clientY;
+    // let x = event.clientX;
+    // let y = event.clientY;
 
-    // console.log(x, y);
+    let x = event.offsetX;
+    let y = event.offsetY;
+    console.log(x, y);
 
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];

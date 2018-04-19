@@ -23,7 +23,6 @@ class App {
 
   initElements() {
     this.dom.app = document.getElementById('app');
-    // document.body.appendChild(this.dom.app);
 
     this.stage = new Stage();
     this.dom.app.appendChild(this.stage.dom());
@@ -48,6 +47,8 @@ class App {
   }
 
   createGraphic(shapes) {
+    let stageEl = this.stage.dom();
+
     // localise shape coordinates
     for (var i = 0; i < shapes.length; i++) {
       let shape = shapes[i];
@@ -58,8 +59,8 @@ class App {
           p.x -= bounds.x;
           p.y -= bounds.y;
         }
-        shape.x = bounds.x;
-        shape.y = bounds.y;
+        shape.x = bounds.x - stageEl.offsetLeft;
+        shape.y = bounds.y - stageEl.offsetTop;
       }
     }
     let graphic = new Graphic({ shapes: shapes });
@@ -105,9 +106,9 @@ class App {
   }
 
   onMouseDown(event) {
-    let x = event.offsetX;
-    let y = event.offsetY;
-    console.log(x, y);
+    // let x = event.offsetX;
+    // let y = event.offsetY;
+    // console.log(x, y);
   }
 
   handleEvent(event) {
