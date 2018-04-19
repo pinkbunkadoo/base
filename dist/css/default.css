@@ -1,38 +1,42 @@
 html body {
   padding: 0;
   margin: 0;
+  background-color: gray;
 }
 
 #app {
-  width: 100vw;
-  height: 100vh;
+  /* width: 100vw; */
+  /* height: 100vh; */
 }
 
 .stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: absolute;
+  left: 100px;
+  top: 100px;
+  /* position: relative; */
+  /* width: 100vw; */
+  /* height: 100vh; */
 }
 
-.stage-object {
+.stage>canvas {
+  /* display: block; */
+}
+
+/* .stage-object {
   position: absolute;
   user-select: none;
   -webkit-user-select: none;
   cursor: default;
-  /* box-sizing: border-box; */
-}
+} */
 
-.stage-object.selected {
-  /* border: 1px solid blue; */
-  /* margin-left: -1px; */
-  /* margin-top: -1px; */
-  background-color: rgba(255, 0, 0, 0.2);
-}
+/* .stage-object.selected { */
+  /* background-color: rgba(255, 0, 0, 0.2); */
+/* } */
 
 .paper {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0px;
+  left: 0px;
   width: 100vw;
   height: 100vh;
   z-index: 500;
@@ -42,13 +46,12 @@ html body {
 }
 
 .paper-cursor {
-  position : absolute;
-  background-color : rgba(0, 0, 0, 0.2);
-
-  width : 4px;
-  height : 4px;
-  margin-left : -2px;
-  margin-top : -2px;
-  cursor : none;
-  pointer-events : none;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  margin-top: -2px;
+  cursor: none;
+  pointer-events: none;
 }

@@ -46,6 +46,10 @@ class Paper extends EventDispatcher {
     this.el.appendChild(this.cursor);
   }
 
+  dom() {
+    return this.el;
+  }
+
   addListeners() {
     for (var i = 0; i < this.listeners.length; i++) {
       window.addEventListener(this.listeners[i], this);

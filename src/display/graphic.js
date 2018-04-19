@@ -6,12 +6,45 @@ import StageObject from './stage_object';
 class Graphic extends StageObject {
   constructor(params={}) {
     super();
-
     this.shapes = params.shapes || [];
+    this.canvas = document.createElement('canvas');
+    let bounds = this.getBounds();
+    if (bounds) {
+      bounds.grow(1);
+      this.width = bounds.width;
+      this.height = bounds.height;
+      this.x = bounds.x;
+      this.y = bounds.y;
+    }
+    this.render();
+  }
 
-    this.el.style.pointerEvents = 'none';
+  get width() {
+    return this._width;
+  }
 
-    this.update();
+  get height() {
+    return this._height;
+  }
+
+  set width(value) {
+    this._width = value;
+    this.canvas.width = value;
+  }
+
+  set height(value) {
+    this._height = value;
+    this.canvas.height = value;
+  }
+
+  hitTest(x, y) {
+    for (var i = 0; i < this.shapes.length; i++) {
+      let shape = this.shapes[i];
+      if (shape.hitTest(x - this.x, y - this.y)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getBounds() {
@@ -47,50 +80,90 @@ class Graphic extends StageObject {
     return rect;
   }
 
-  update() {
-    while (this.el.firstChild) this.el.removeChild(this.el.firstChild);
+  render() {
+    // console.log('Graphic.render');
+    let ctx = this.canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // ctx.fillStyle = 'green';
+    // ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.save();
 
-    let bounds = this.getBounds();
-    if (bounds) {
-      this.x = bounds.x;
-      this.y = bounds.y;
+    ctx.translate(1, 1);
 
-      this.el.style.width = bounds.width + 'px';
-      this.el.style.height = bounds.height + 'px';
+    for (var i = 0; i < this.shapes.length; i++) {
+      let shape = this.shapes[i];
 
-      let svgEl = svg.svg();
-      svgEl.setAttribute('width', bounds.width);
-      svgEl.setAttribute('height', bounds.height);
-      svgEl.setAttribute('viewBox', '0 0 ' + bounds.width + ' ' + bounds.height);
-      svgEl.setAttribute('pointer-events', 'none');
+      // let ps = 'M';
+      ctx.strokeStyle = shape.stroke || 'transparent';
+      ctx.fillStyle = shape.fill || 'transparent';
 
-      for (var i = 0; i < this.shapes.length; i++) {
-        let shape = this.shapes[i];
+      ctx.beginPath();
 
-        let ps = 'M';
-
-        for (var j = 0; j < shape.points.length; j++) {
-          let p = shape.points[j];
-          if (j > 0) ps += 'L';
-          ps += (p.x - bounds.x) + ' ' + (p.y - bounds.y) + ' ';
-        }
-        if (shape.closed) {
-          ps += 'Z';
-        }
-
-        console.log('fill', shape.fill);
-
-        let g = svg.element('g');
-        // g.setAttribute('pointer-events', shape.fill ? 'visiblePainted' : 'visibleStroke');
-        g.setAttribute('pointer-events', 'painted');
-        let path = svg.element('path', { d: ps, fill: (shape.fill ? shape.fill : 'none'), stroke: shape.stroke });
-        path.setAttribute('stroke-width', 3);
-        g.appendChild(path);
-
-        svgEl.appendChild(g);
+      for (var j = 0; j < shape.points.length; j++) {
+        let p = shape.points[j];
+        if (j == 0)
+          ctx.moveTo(p.x, p.y);
+        else
+          ctx.lineTo(p.x, p.y);
+        // let p = shape.points[j];
+        // if (j > 0) ps += 'L';
+        // ps += (p.x - bounds.x) + ' ' + (p.y - bounds.y) + ' ';
       }
-      this.el.appendChild(svgEl);
+      if (shape.closed) {
+        // ps += 'Z';
+        ctx.closePath();
+      }
+      ctx.fill();
+      ctx.stroke();
     }
+
+    ctx.restore();
+  }
+
+  update() {
+    // while (this.el.firstChild) this.el.removeChild(this.el.firstChild);
+    //
+    // let bounds = this.getBounds();
+    // if (bounds) {
+    //   this.x = bounds.x;
+    //   this.y = bounds.y;
+    //
+    //   this.el.style.width = bounds.width + 'px';
+    //   this.el.style.height = bounds.height + 'px';
+    //
+    //   let svgEl = svg.svg();
+    //   svgEl.setAttribute('width', bounds.width);
+    //   svgEl.setAttribute('height', bounds.height);
+    //   svgEl.setAttribute('viewBox', '0 0 ' + bounds.width + ' ' + bounds.height);
+    //   svgEl.setAttribute('pointer-events', 'none');
+    //
+    //   for (var i = 0; i < this.shapes.length; i++) {
+    //     let shape = this.shapes[i];
+    //
+    //     let ps = 'M';
+    //
+    //     for (var j = 0; j < shape.points.length; j++) {
+    //       let p = shape.points[j];
+    //       if (j > 0) ps += 'L';
+    //       ps += (p.x - bounds.x) + ' ' + (p.y - bounds.y) + ' ';
+    //     }
+    //     if (shape.closed) {
+    //       ps += 'Z';
+    //     }
+    //
+    //     console.log('fill', shape.fill);
+    //
+    //     let g = svg.element('g');
+    //     // g.setAttribute('pointer-events', shape.fill ? 'visiblePainted' : 'visibleStroke');
+    //     g.setAttribute('pointer-events', 'painted');
+    //     let path = svg.element('path', { d: ps, fill: (shape.fill ? shape.fill : 'none'), stroke: shape.stroke });
+    //     path.setAttribute('stroke-width', 3);
+    //     g.appendChild(path);
+    //
+    //     svgEl.appendChild(g);
+    //   }
+    //   this.el.appendChild(svgEl);
+    // }
   }
 }
 

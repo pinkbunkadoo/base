@@ -43,6 +43,23 @@ class Shape {
 
     return rect;
   }
+
+  // Copyright (c) 1970-2003, Wm. Randolph Franklin
+  // https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
+
+  static pointInPolygon(points, testx, testy) {
+    let i, j, c = 0;
+    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+      if (((points[i].y > testy) != (points[j].y > testy)) &&
+        (testx < (points[j].x - points[i].x) * (testy - points[i].y) / (points[j].y - points[i].y) + points[i].x))
+        c = !c;
+    }
+    return c;
+  }
+
+  hitTest(x, y) {
+    return Shape.pointInPolygon(this.points, x, y);
+  }
 }
 
 export default Shape;

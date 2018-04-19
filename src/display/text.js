@@ -9,12 +9,16 @@ class Text extends StageObject {
 
   setSize(value) {
     this.size = value;
-    this.el.style.fontSize = this.size + 'px';
+    // this.el.style.fontSize = this.size + 'px';
   }
 
   setText(value) {
     this.value = value;
-    this.el.innerHTML = this.value;
+    // this.el.innerHTML = this.value;
+  }
+
+  hitTest(x, y) {
+    return false;
   }
 }
 

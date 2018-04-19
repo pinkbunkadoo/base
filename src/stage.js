@@ -1,30 +1,42 @@
 
 class Stage {
   constructor(params={}) {
-    this.el = document.createElement('div');
-    this.el.classList.add('stage');
-
     this.children = [];
     this.selection = [];
 
-    this.el.addEventListener('mousedown', this);
-    this.el.addEventListener('mouseup', this);
-    this.el.addEventListener('mousemove', this);
+    this.el = document.createElement('div');
+    this.el.classList.add('stage');
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = 320;
+    this.canvas.height = 200;
+
+    this.canvas.addEventListener('mousedown', this);
+    this.canvas.addEventListener('mouseup', this);
+    this.canvas.addEventListener('mousemove', this);
+
+    this.el.appendChild(this.canvas);
+  }
+
+  dom() {
+    return this.el;
   }
 
   add(stageObject) {
+    console.log('add', stageObject);
     this.children.push(stageObject);
-    this.el.appendChild(stageObject.dom());
+    // this.el.appendChild(stageObject.dom());
     stageObject.addedToStage();
-    stageObject.on('mousedown', (obj) => {
-      // if (this.selection.includes(obj)) {
-      //   this.selection = this.selection.filter(element => element !== obj);
-      //   obj.deselect();
-      // }
-      this.deselect();
-      this.selection = [ obj ];
-      obj.select();
-    });
+    // stageObject.on('mousedown', (obj) => {
+    //   // if (this.selection.includes(obj)) {
+    //   //   this.selection = this.selection.filter(element => element !== obj);
+    //   //   obj.deselect();
+    //   // }
+    //   this.deselect();
+    //   this.selection = [ obj ];
+    //   obj.select();
+    // });
+    this.render();
   }
 
   deselect() {
@@ -36,10 +48,37 @@ class Stage {
     }
   }
 
-  onMouseDown(event) {
-    if (event.target == this.el) {
-      this.deselect();
+  render() {
+    let ctx = this.canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    for (var i = 0; i < this.children.length; i++) {
+      let child = this.children[i];
+      ctx.drawImage(child.canvas, child.x, child.y);
     }
+    // ctx.fillStyle = 'lightgray';
+    // ctx.fillRect(0, 0, this.canvas.width - 1, this.canvas.height - 1);
+  }
+
+  onMouseDown(event) {
+    // let x = event.offsetX;
+    // let y = event.offsetY;
+    let x = event.clientX;
+    let y = event.clientY;
+
+    // console.log(x, y);
+
+    for (var i = 0; i < this.children.length; i++) {
+      let child = this.children[i];
+      if (child.hitTest(x, y)) {
+        console.log('hit', child);
+      }
+    }
+    // if (event.target == this.el) {
+    //   this.deselect();
+    // }
   }
 
   onMouseUp(event) {

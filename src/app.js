@@ -18,17 +18,18 @@ class App {
 
   initEventListeners() {
     window.addEventListener('keydown', this);
+    window.addEventListener('mousedown', this);
   }
 
   initElements() {
     this.dom.app = document.getElementById('app');
-    document.body.appendChild(this.dom.app);
+    // document.body.appendChild(this.dom.app);
 
     this.stage = new Stage();
-    this.dom.app.appendChild(this.stage.el);
+    this.dom.app.appendChild(this.stage.dom());
 
     this.paper = new Paper({ visible: false });
-    this.dom.app.appendChild(this.paper.el);
+    this.dom.app.appendChild(this.paper.dom());
 
     // this.paper.on('paths', (paths) => {
     //   this.createShape(paths);
@@ -42,16 +43,27 @@ class App {
     let label = new Text({ value: 'hello' });
     label.x = 50;
     label.y = 100;
-    label.on('hey', (event) => {});
 
     this.stage.add(label);
   }
 
   createGraphic(shapes) {
-    if (shapes.length) {
-      let graphic = new Graphic({ shapes: shapes });
-      this.stage.add(graphic);
+    // localise shape coordinates
+    for (var i = 0; i < shapes.length; i++) {
+      let shape = shapes[i];
+      let bounds = shape.getBounds();
+      if (bounds) {
+        for (var j = 0; j < shape.points.length; j++) {
+          let p = shape.points[j];
+          p.x -= bounds.x;
+          p.y -= bounds.y;
+        }
+        shape.x = bounds.x;
+        shape.y = bounds.y;
+      }
     }
+    let graphic = new Graphic({ shapes: shapes });
+    this.stage.add(graphic);
   }
 
   showPaper() {
@@ -92,9 +104,18 @@ class App {
     }
   }
 
+  onMouseDown(event) {
+    let x = event.offsetX;
+    let y = event.offsetY;
+    console.log(x, y);
+  }
+
   handleEvent(event) {
     if (event.type == 'keydown') {
       this.onKeyDown(event);
+    }
+    else if (event.type == 'mousedown') {
+      this.onMouseDown(event);
     }
   }
 }
