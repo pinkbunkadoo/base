@@ -1,3 +1,5 @@
+import Shape from './display/shape';
+import Group from './display/group';
 
 class Stage {
   constructor(params={}) {
@@ -15,7 +17,7 @@ class Stage {
 
     this.cursor = document.createElement('div');
     this.cursor.classList.add('stage-cursor');
-    this.el.appendChild(this.cursor);
+    // this.el.appendChild(this.cursor);
 
     window.addEventListener('mousedown', this);
     window.addEventListener('mouseup', this);
@@ -50,38 +52,77 @@ class Stage {
       }
       this.selection = [];
     }
+    this.render();
+  }
+
+  renderShape(shape) {
+    let ctx = this.canvas.getContext('2d');
+    ctx.strokeStyle = shape.stroke || 'transparent';
+    ctx.fillStyle = shape.fill || 'transparent';
+
+    ctx.beginPath();
+
+    for (var j = 0; j < shape.points.length; j++) {
+      let p = shape.points[j];
+      if (j == 0)
+        ctx.moveTo(p.x, p.y);
+      else
+        ctx.lineTo(p.x, p.y);
+    }
+    if (shape.closed) ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  renderObject(stageObject) {
+    if (stageObject instanceof Group) {
+      for (var i = 0; i < stageObject.children.length; i++) {
+        let child = stageObject.children[i];
+        this.renderObject(child);
+      }
+    }
+    else if (stageObject instanceof Shape) {
+      this.renderShape(stageObject);
+    }
   }
 
   render() {
     let ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
-      ctx.drawImage(child.canvas, child.x, child.y);
+      this.renderObject(child);
+      if (child.selected) {
+        ctx.strokeStyle = 'cyan';
+        ctx.beginPath();
+        ctx.rect(child.x-4+0.5, child.y-4+0.5, 8, 8);
+        ctx.stroke();
+      }
     }
-    // ctx.fillStyle = 'lightgray';
-    // ctx.fillRect(0, 0, this.canvas.width - 1, this.canvas.height - 1);
   }
 
   onMouseDown(event) {
-    // let x = event.offsetX;
-    // let y = event.offsetY;
-    // let x = event.clientX;
-    // let y = event.clientY;
-
     let x = event.offsetX;
     let y = event.offsetY;
-    console.log(x, y);
+
+    let hit = false;
 
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
       if (child.hitTest(x, y)) {
-        console.log('hit', child);
+        // console.log('hit', child);
+        child.select();
+        this.selection = [ child ];
+        hit = true;
       }
     }
+
+    if (!hit) {
+      this.deselect();
+    }
+
+    this.render();
     // if (event.target == this.el) {
     //   this.deselect();
     // }

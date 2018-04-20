@@ -13,11 +13,17 @@ html body {
   position: absolute;
   left: 100px;
   top: 100px;
-  cursor: none;
+  /* cursor: none; */
 }
 
 .stage>canvas {
   display: block;
+  background-color: pink;
+}
+
+.stage>canvas:hover {
+  display: block;
+  background-color: cyan;
 }
 
 .stage-cursor {

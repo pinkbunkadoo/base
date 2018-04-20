@@ -1,8 +1,11 @@
 import Point from '../geom/point';
 import Rectangle from '../geom/rectangle';
+import Transform from './transform';
 
-class Shape {
+class Shape extends Transform {
   constructor(params={}) {
+    super();
+
     this.points = [];
 
     let points = params.points;
@@ -18,13 +21,11 @@ class Shape {
     this.strokeWidth = params.strokeWidth || 1;
     this.closed = params.closed || false;
 
-    this.x = 0;
-    this.y = 0;
+    // this.x = 0;
+    // this.y = 0;
   }
 
   getBounds() {
-    let rect = null;
-
     let xmax = Number.NEGATIVE_INFINITY;
     let xmin = Number.POSITIVE_INFINITY;
     let ymax = Number.NEGATIVE_INFINITY;
@@ -33,15 +34,17 @@ class Shape {
     if (this.points.length) {
       for (var i = 0; i < this.points.length; i++) {
         let p = this.points[i];
-        xmax = p.x > xmax ? p.x : xmax;
-        xmin = p.x < xmin ? p.x : xmin;
-        ymax = p.y > ymax ? p.y : ymax;
-        ymin = p.y < ymin ? p.y : ymin;
+        let x = p.x;
+        let y = p.y;
+        xmax = x > xmax ? x : xmax;
+        xmin = x < xmin ? x : xmin;
+        ymax = y > ymax ? y : ymax;
+        ymin = y < ymin ? y : ymin;
       }
-      rect = new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+      return new Rectangle(xmin + this.x, ymin + this.y, xmax - xmin, ymax - ymin);
     }
 
-    return rect;
+    return null;
   }
 
   // Copyright (c) 1970-2003, Wm. Randolph Franklin
