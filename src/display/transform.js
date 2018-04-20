@@ -38,6 +38,10 @@ class Transform extends EventDispatcher {
     this.selected = false;
   }
 
+  getBounds() {
+    return null;
+  }
+
 }
 
 export default Transform;

@@ -1,6 +1,6 @@
-import StageObject from './stage_object';
+import Transform from './transform';
 
-class Text extends StageObject {
+class Text extends Transform {
   constructor(params={}) {
     super();
     this.setSize(params.size || 48);

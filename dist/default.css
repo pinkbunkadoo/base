@@ -11,19 +11,13 @@ html body {
 
 .stage {
   position: absolute;
-  left: 100px;
-  top: 100px;
-  /* cursor: none; */
+  left: 50px;
+  top: 20px;
 }
 
 .stage>canvas {
   display: block;
-  background-color: pink;
-}
-
-.stage>canvas:hover {
-  display: block;
-  background-color: cyan;
+  background-color: white;
 }
 
 .stage-cursor {
@@ -31,13 +25,10 @@ html body {
   background-color: rgba(0, 0, 0, 1);
   width: 1px;
   height: 1px;
-  /* margin-left: 0px; */
-  /* margin-top: 0px; */
   cursor: none;
   pointer-events: none;
   z-index: 1000;
 }
-
 
 /* .stage-object {
   position: absolute;
@@ -46,9 +37,9 @@ html body {
   cursor: default;
 } */
 
-/* .stage-object.selected { */
-  /* background-color: rgba(255, 0, 0, 0.2); */
-/* } */
+/* .stage-object.selected {
+  background-color: rgba(255, 0, 0, 0.2);
+} */
 
 .paper {
   position: absolute;

@@ -40,31 +40,52 @@ class App {
     console.log('startup');
 
     let label = new Text({ value: 'hello' });
-    label.x = 50;
+    label.x = 250;
     label.y = 100;
 
     this.stage.add(label);
+
+    let shape = new Shape({
+      points: [ { x: 0, y: 0 }, { x: 60, y: 0 }, { x: 40, y: 40 }, { x: 20, y: 10 } ],
+      fill: '#cccccc',
+      stroke: 'black',
+      closed: true
+    });
+    // shape.x = 60;
+    // shape.y = 80;
+    this.stage.add(shape);
   }
 
-  createGraphic(shapes) {
-    let stageEl = this.stage.dom();
+  // createGraphic(shapes) {
+  //   let stageEl = this.stage.dom();
+  //
+  //   // localise shape coordinates
+  //   for (var i = 0; i < shapes.length; i++) {
+  //     let shape = shapes[i];
+  //     let bounds = shape.getBounds();
+  //     if (bounds) {
+  //       for (var j = 0; j < shape.points.length; j++) {
+  //         let p = shape.points[j];
+  //         p.x -= bounds.x;
+  //         p.y -= bounds.y;
+  //       }
+  //       shape.x = bounds.x - stageEl.offsetLeft;
+  //       shape.y = bounds.y - stageEl.offsetTop;
+  //     }
+  //   }
+  //   let graphic = new Graphic({ shapes: shapes });
+  //   this.stage.add(graphic);
+  // }
 
-    // localise shape coordinates
+  grabPaperShapes() {
+    let stageEl = this.stage.dom();
+    let shapes = this.paper.getShapes();
     for (var i = 0; i < shapes.length; i++) {
       let shape = shapes[i];
-      let bounds = shape.getBounds();
-      if (bounds) {
-        for (var j = 0; j < shape.points.length; j++) {
-          let p = shape.points[j];
-          p.x -= bounds.x;
-          p.y -= bounds.y;
-        }
-        shape.x = bounds.x - stageEl.offsetLeft;
-        shape.y = bounds.y - stageEl.offsetTop;
-      }
+      shape.x -= stageEl.offsetLeft;
+      shape.y -= stageEl.offsetTop;
+      this.stage.add(shape);
     }
-    let graphic = new Graphic({ shapes: shapes });
-    this.stage.add(graphic);
   }
 
   showPaper() {
@@ -77,9 +98,7 @@ class App {
 
   hidePaper() {
     if (this.mode == 'paper') {
-      let shapes = this.paper.getShapes();
-      this.createGraphic(shapes);
-
+      this.grabPaperShapes();
       this.paper.setVisible(false);
       this.paper.clear();
       this.mode = null;

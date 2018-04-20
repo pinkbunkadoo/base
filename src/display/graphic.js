@@ -1,9 +1,9 @@
 import svg from '../svg';
 import Point from '../geom/point';
 import Rectangle from '../geom/rectangle';
-import StageObject from './stage_object';
+import Transform from './transform';
 
-class Graphic extends StageObject {
+class Graphic extends Transform {
   constructor(params={}) {
     super();
     this.shapes = params.shapes || [];

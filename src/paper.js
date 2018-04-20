@@ -7,15 +7,10 @@ import Shape from './display/shape';
 let SNAP_RADIUS = 3;
 let COLORS = [
   'white',
-  // '#e6e6e6',
   '#cccccc',
-  // '#b3b3b3',
   '#999999',
-  // '#808080',
   '#666666',
-  // '#4d4d4d',
   '#333333',
-  // '#1a1a1a',
   'black'
 ];
 
@@ -113,13 +108,43 @@ class Paper extends EventDispatcher {
     ctx.restore();
   }
 
+  drawShape(shape) {
+    let points = shape.getPoints();
+
+    let ctx = this.canvas.getContext('2d');
+    ctx.save();
+
+    ctx.translate(0.5, 0.5);
+
+    ctx.strokeStyle = shape.stroke || 'transparent';
+    ctx.fillStyle = shape.fill || 'transparent';
+
+    ctx.beginPath();
+
+    for (var j = 0; j < points.length; j++) {
+      let p = points[j];
+      if (j == 0)
+        ctx.moveTo(p.x + shape.x, p.y + shape.y);
+      else
+        ctx.lineTo(p.x + shape.x, p.y + shape.y);
+    }
+
+    if (shape.closed) ctx.closePath();
+
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
   render() {
     let ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     for (let i = 0; i < this.shapes.length; i++) {
       let shape = this.shapes[i];
-      this.drawPath({ points: shape.points, fill: shape.fill, stroke: shape.stroke, closed: shape.closed });
+      // this.drawPath({ points: shape.points, fill: shape.fill, stroke: shape.stroke, closed: shape.closed });
+      this.drawShape(shape);
     }
 
     if (this.points.length) {

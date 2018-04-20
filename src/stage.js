@@ -10,19 +10,17 @@ class Stage {
     this.el.classList.add('stage');
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 320;
-    this.canvas.height = 200;
+    this.canvas.width = 450;
+    this.canvas.height = 450;
 
     this.el.appendChild(this.canvas);
 
     this.cursor = document.createElement('div');
     this.cursor.classList.add('stage-cursor');
-    // this.el.appendChild(this.cursor);
 
     window.addEventListener('mousedown', this);
     window.addEventListener('mouseup', this);
     window.addEventListener('mousemove', this);
-
   }
 
   dom() {
@@ -30,7 +28,6 @@ class Stage {
   }
 
   add(stageObject) {
-    // console.log('add', stageObject);
     this.children.push(stageObject);
     stageObject.addedToStage();
     // stageObject.on('mousedown', (obj) => {
@@ -56,22 +53,47 @@ class Stage {
   }
 
   renderShape(shape) {
+    let points = shape.getPoints();
+
     let ctx = this.canvas.getContext('2d');
+    ctx.save();
+
+    ctx.translate(0.5, 0.5);
+
     ctx.strokeStyle = shape.stroke || 'transparent';
     ctx.fillStyle = shape.fill || 'transparent';
 
     ctx.beginPath();
 
-    for (var j = 0; j < shape.points.length; j++) {
-      let p = shape.points[j];
+    for (var j = 0; j < points.length; j++) {
+      let p = points[j];
       if (j == 0)
-        ctx.moveTo(p.x, p.y);
+        ctx.moveTo(p.x + shape.x, p.y + shape.y);
       else
-        ctx.lineTo(p.x, p.y);
+        ctx.lineTo(p.x + shape.x, p.y + shape.y);
     }
+
     if (shape.closed) ctx.closePath();
+
     ctx.fill();
     ctx.stroke();
+
+    ctx.restore();
+  }
+
+  renderHints(stageObject) {
+    let ctx = this.canvas.getContext('2d');
+    ctx.strokeStyle = stageObject.selected ? 'red' : 'blue';
+    ctx.beginPath();
+    ctx.arc(stageObject.x >> 0, stageObject.y >> 0, 3, 0, Math.PI * 2, false);
+    ctx.stroke();
+    let bounds = stageObject.getBounds();
+    if (bounds) {
+      ctx.strokeStyle = stageObject.selected ? 'red' : 'blue';
+      ctx.beginPath();
+      ctx.rect((stageObject.x) + bounds.x + 0.5, (stageObject.y) + bounds.y + 0.5, bounds.width, bounds.height);
+      ctx.stroke();
+    }
   }
 
   renderObject(stageObject) {
@@ -84,34 +106,51 @@ class Stage {
     else if (stageObject instanceof Shape) {
       this.renderShape(stageObject);
     }
+    if (stageObject.selected) this.renderHints(stageObject);
   }
 
   render() {
     let ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
       this.renderObject(child);
-      if (child.selected) {
-        ctx.strokeStyle = 'cyan';
-        ctx.beginPath();
-        ctx.rect(child.x-4+0.5, child.y-4+0.5, 8, 8);
-        ctx.stroke();
-      }
     }
   }
 
+  moveSelectionBy(dx, dy) {
+    // console.log('moveSelectionBy', dx, dy);
+    for (var i = 0; i < this.selection.length; i++) {
+      let item = this.selection[i];
+      item.x += dx;
+      item.y += dy;
+    }
+    this.render();
+  }
+
+  beginDrag() {
+    this.drag = true;
+  }
+
+  cancelDrag() {
+    this.drag = false;
+  }
+
   onMouseDown(event) {
-    let x = event.offsetX;
-    let y = event.offsetY;
+    // let x = event.offsetX;
+    // let y = event.offsetY;
+    this.cursorX = event.pageX - this.el.offsetLeft;
+    this.cursorY = event.pageY - this.el.offsetTop;
+
+    this.downX = this.cursorX;
+    this.downY = this.cursorY;
 
     let hit = false;
 
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
-      if (child.hitTest(x, y)) {
-        // console.log('hit', child);
+      if (child.hitTest(this.cursorX, this.cursorY)) {
+        this.deselect();
         child.select();
         this.selection = [ child ];
         hit = true;
@@ -123,20 +162,41 @@ class Stage {
     }
 
     this.render();
-    // if (event.target == this.el) {
-    //   this.deselect();
-    // }
   }
 
   onMouseUp(event) {
+    this.cancelDrag();
   }
 
   onMouseMove(event) {
-    this.cursorx = event.pageX - this.el.offsetLeft;
-    this.cursory = event.pageY - this.el.offsetTop;
+    // console.log('move');
+    this.cursorX = event.pageX - this.el.offsetLeft;
+    this.cursorY = event.pageY - this.el.offsetTop;
 
-    this.cursor.style.left = this.cursorx + 'px';
-    this.cursor.style.top = this.cursory + 'px';
+    // this.cursor.style.left = this.cursorX + 'px';
+    // this.cursor.style.top = this.cursorY + 'px';
+    // console.log(event.buttons, this.cursorX);
+
+    if (event.buttons & 1) {
+      if (this.drag) {
+        if (this.selection.length) {
+          this.moveSelectionBy(event.movementX, event.movementY);
+        }
+        else {
+          let stageEl = this.dom();
+          stageEl.style.left = (stageEl.offsetLeft + event.movementX) + 'px';
+          stageEl.style.top = (stageEl.offsetTop + event.movementY) + 'px';
+        }
+      } else {
+        let dx = this.cursorX - this.downX;
+        let dy = this.cursorY - this.downY;
+        // console.log(dx);
+        if (Math.abs(dx) >= 2 || Math.abs(dy) >= 2) {
+          this.beginDrag();
+          this.moveSelectionBy(dx, dy);
+        }
+      }
+    }
   }
 
   handleEvent(event) {
