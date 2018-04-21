@@ -1,3 +1,4 @@
+import Util from '../util';
 import Point from '../geom/point';
 import PointList from '../geom/point_list';
 import Rectangle from '../geom/rectangle';
@@ -16,7 +17,6 @@ class Shape extends Transform {
     let bounds = this.pointList.getBounds();
     this.x = bounds.x + bounds.width / 2;
     this.y = bounds.y + bounds.height / 2;
-    // console.log(bounds);
 
     let points = this.pointList.points;
 
@@ -25,8 +25,6 @@ class Shape extends Transform {
       p.x -= this.x;
       p.y -= this.y;
     }
-
-    // console.log(points);
   }
 
   getPoints() {
@@ -37,21 +35,23 @@ class Shape extends Transform {
     return this.pointList.getBounds();
   }
 
-  // Copyright (c) 1970-2003, Wm. Randolph Franklin
-  // https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
-
-  static pointInside(points, testx, testy) {
-    let i, j, c = 0;
-    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-      if (((points[i].y > testy) != (points[j].y > testy)) &&
-        (testx < (points[j].x - points[i].x) * (testy - points[i].y) / (points[j].y - points[i].y) + points[i].x))
-        c = !c;
+  intersectsRectangle(xmin, ymin, xmax, ymax) {
+    if (xmin > xmax) [xmin, xmax] = [ xmax, xmin ];
+    if (ymin > ymax) [ymin, ymax] = [ ymax, ymin ];
+    let points = this.pointList.points;
+    for (var i = 1; i < points.length; i++) {
+      let p0 = points[i - 1];
+      let p1 = points[i];
+      if (Util.lineIntersectsRectangle(p0.x, p0.y, p1.x, p1.y, xmin - this.x, ymin - this.y, xmax - this.x, ymax - this.y)) {
+        return true;
+      }
     }
-    return c;
+    return false;
   }
 
   hitTest(x, y) {
-    return Shape.pointInside(this.pointList.points, x - this.x, y - this.y);
+    let points = this.pointList.points;
+    return Util.pointInPolygon(points, x - this.x, y - this.y);
   }
 }
 
