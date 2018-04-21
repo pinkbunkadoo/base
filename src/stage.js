@@ -10,8 +10,8 @@ class Stage {
     this.el.classList.add('stage');
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 450;
-    this.canvas.height = 450;
+    this.canvas.width = 400;
+    this.canvas.height = 300;
 
     this.el.appendChild(this.canvas);
 
