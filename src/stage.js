@@ -11,8 +11,8 @@ class Stage {
     this.el.classList.add('stage');
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 400;
-    this.canvas.height = 300;
+    this.canvas.width = params.width || 320;
+    this.canvas.height = params.height || 200;
 
     this.el.appendChild(this.canvas);
 
@@ -35,6 +35,8 @@ class Stage {
   }
 
   selectMarquee(xmin, ymin, xmax, ymax) {
+    if (xmin > xmax) [xmin, xmax] = [ xmax, xmin ];
+    if (ymin > ymax) [ymin, ymax] = [ ymax, ymin ];
     let selection = [];
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
@@ -64,7 +66,7 @@ class Stage {
     let ctx = this.canvas.getContext('2d');
     ctx.save();
 
-    ctx.translate(0.5, 0.5);
+    // ctx.translate(0.5, 0.5);
 
     ctx.strokeStyle = shape.stroke || 'transparent';
     ctx.fillStyle = shape.fill || 'transparent';
@@ -129,10 +131,14 @@ class Stage {
       ctx.translate(0.5, 0.5);
       ctx.strokeStyle = 'gray';
       ctx.beginPath();
-      ctx.moveTo(this.marquee[0], this.marquee[1]);
-      ctx.lineTo(this.marquee[2], this.marquee[1]);
-      ctx.lineTo(this.marquee[2], this.marquee[3]);
-      ctx.lineTo(this.marquee[0], this.marquee[3]);
+      // ctx.moveTo(this.marquee[0], this.marquee[1]);
+      // ctx.lineTo(this.marquee[2], this.marquee[1]);
+      // ctx.lineTo(this.marquee[2], this.marquee[3]);
+      // ctx.lineTo(this.marquee[0], this.marquee[3]);
+      ctx.moveTo(this.downX, this.downY);
+      ctx.lineTo(this.cursorX, this.downY);
+      ctx.lineTo(this.cursorX, this.cursorY);
+      ctx.lineTo(this.downX, this.cursorY);
       ctx.closePath();
       ctx.stroke();
       ctx.restore();
@@ -159,7 +165,7 @@ class Stage {
 
   beginMarquee(xmin, ymin, xmax, ymax) {
     this.mode = 'marquee';
-    this.marquee = [ xmin, ymin, xmax, ymax ];
+    // this.marquee = [ xmin, ymin, xmax, ymax ];
   }
 
   cancelMarquee() {
@@ -205,7 +211,7 @@ class Stage {
     if (this.mode == 'drag')
       this.cancelDrag();
     else if (this.mode == 'marquee') {
-      this.selectMarquee(...this.marquee);
+      this.selectMarquee(this.downX, this.downY, this.cursorX, this.cursorY);
       this.cancelMarquee();
     }
   }
@@ -214,9 +220,6 @@ class Stage {
     this.cursorX = event.pageX - this.el.offsetLeft;
     this.cursorY = event.pageY - this.el.offsetTop;
 
-    // this.cursor.style.left = this.cursorX + 'px';
-    // this.cursor.style.top = this.cursorY + 'px';
-
     if (event.buttons & 1) {
       if (this.mode == 'drag') {
         if (this.selection.length) {
@@ -224,8 +227,8 @@ class Stage {
         }
       }
       else if (this.mode == 'marquee') {
-        this.marquee[2] += event.movementX;
-        this.marquee[3] += event.movementY;
+        // this.marquee[2] += event.movementX;
+        // this.marquee[3] += event.movementY;
         this.render();
       }
       else {

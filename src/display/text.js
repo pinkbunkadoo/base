@@ -4,17 +4,15 @@ class Text extends Transform {
   constructor(params={}) {
     super();
     this.setSize(params.size || 48);
-    this.setText(params.value);
+    this.setText(params.content);
   }
 
   setSize(value) {
     this.size = value;
-    // this.el.style.fontSize = this.size + 'px';
   }
 
   setText(value) {
-    this.value = value;
-    // this.el.innerHTML = this.value;
+    this.content = value;
   }
 
   hitTest(x, y) {

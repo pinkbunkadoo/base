@@ -201,6 +201,16 @@ class Paper extends EventDispatcher {
     this.render();
   }
 
+  hitTest(x, y) {
+    for (var i = this.shapes.length - 1; i >= 0; i--) {
+      let child = this.shapes[i];
+      if (child.hitTest(x, y)) {
+        return child;
+      }
+    }
+    return null;
+  }
+
   onMouseDown(event) {
     if (event.button == 0) {
       let p = new Point(event.offsetX, event.offsetY);
@@ -228,6 +238,10 @@ class Paper extends EventDispatcher {
     this.render();
     this.cursor.style.left = this.cursorx + 'px';
     this.cursor.style.top = this.cursory + 'px';
+
+    if (this.mode !== 'draw') {
+
+    }
   }
 
   onDblClick(event) {
@@ -235,26 +249,27 @@ class Paper extends EventDispatcher {
   }
 
   onKeyDown(event) {
-    if (this.command) {
-      this.onParameter(event.key);
+    if (event.key == 's' && !event.repeat) {
+      this.setStroke(this.stroke ? null : 'black')
+    }
+    else if (event.key == '0' && !event.repeat) {
+      this.setFill(null);
+    }
+    else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key) && !event.repeat) {
+      let color = COLORS[parseInt(event.key) - 1];
+      if (color !== undefined)
+        this.setFill(color);
     }
     else {
-      if (event.key == 'Escape' && !event.repeat) {
-        this.cancelPath();
+      if (this.mode == 'draw') {
+        if (event.key == 'Escape' && !event.repeat) {
+          this.cancelPath();
+        }
+        else if (event.key == 'Enter' && !event.repeat) {
+          this.closePath();
+        }
       }
-      else if (event.key == 'Enter' && !event.repeat) {
-        this.closePath();
-      }
-      else if (event.key == 's' && !event.repeat) {
-        this.setStroke(this.stroke ? null : 'black')
-      }
-      else if (event.key == '0' && !event.repeat) {
-        this.setFill(null);
-      }
-      else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key) && !event.repeat) {
-        let color = COLORS[parseInt(event.key) - 1];
-        if (color !== undefined)
-          this.setFill(color);
+      else {
       }
     }
   }

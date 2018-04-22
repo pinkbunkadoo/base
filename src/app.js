@@ -24,7 +24,7 @@ class App {
   initElements() {
     this.dom.app = document.getElementById('app');
 
-    this.stage = new Stage();
+    this.stage = new Stage({ width: 480, height: 480 });
     this.dom.app.appendChild(this.stage.dom());
 
     this.paper = new Paper({ visible: false });
@@ -39,11 +39,10 @@ class App {
   startup() {
     console.log('startup');
 
-    let label = new Text({ value: 'hello' });
-    label.x = 250;
-    label.y = 100;
-
-    this.stage.add(label);
+    // let label = new Text({ title: 'hello' });
+    // label.x = 250;
+    // label.y = 100;
+    // this.stage.add(label);
 
     let shape = new Shape({
       points: [ { x: 0, y: 0 }, { x: 60, y: 0 }, { x: 40, y: 40 }, { x: 20, y: 10 } ],
@@ -51,8 +50,18 @@ class App {
       stroke: 'black',
       closed: true
     });
-    // shape.x = 60;
-    // shape.y = 80;
+    shape.x = 60;
+    shape.y = 80;
+    this.stage.add(shape);
+
+    shape = new Shape({
+      points: [ { x: 0, y: 0 }, { x: 60, y: 20 }, { x: 100, y: 20 }, { x: 100, y: 70 } ],
+      fill: '#cccccc',
+      stroke: null,
+      closed: true
+    });
+    shape.x = 150;
+    shape.y = 100;
     this.stage.add(shape);
   }
 
