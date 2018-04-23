@@ -14,17 +14,17 @@ class Shape extends Transform {
     this.closed = params.closed || false;
 
     this.pointList = new PointList(params.points);
-    let bounds = this.pointList.getBounds();
-    this.x = bounds.x + bounds.width / 2;
-    this.y = bounds.y + bounds.height / 2;
-
-    let points = this.pointList.points;
-
-    for (var i = 0; i < points.length; i++) {
-      let p = points[i];
-      p.x -= this.x;
-      p.y -= this.y;
-    }
+    // let bounds = this.pointList.getBounds();
+    // this.x = bounds.x + bounds.width / 2;
+    // this.y = bounds.y + bounds.height / 2;
+    //
+    // let points = this.pointList.points;
+    //
+    // for (var i = 0; i < points.length; i++) {
+    //   let p = points[i];
+    //   p.x -= this.x;
+    //   p.y -= this.y;
+    // }
   }
 
   getPoints() {
@@ -51,7 +51,12 @@ class Shape extends Transform {
 
   hitTest(x, y) {
     let points = this.pointList.points;
-    return Util.pointInPolygon(points, x - this.x, y - this.y);
+    if (this.fill) {
+      return Util.pointInPolygon(points, x - this.x, y - this.y);
+    }
+    else {
+      
+    }
   }
 }
 

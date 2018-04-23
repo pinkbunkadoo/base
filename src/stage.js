@@ -60,16 +60,13 @@ class Stage {
     this.render();
   }
 
-  renderShape(shape) {
+  renderShape(shape, highlight) {
     let points = shape.getPoints();
 
     let ctx = this.canvas.getContext('2d');
     ctx.save();
 
     // ctx.translate(0.5, 0.5);
-
-    ctx.strokeStyle = shape.stroke || 'transparent';
-    ctx.fillStyle = shape.fill || 'transparent';
 
     ctx.beginPath();
 
@@ -82,6 +79,16 @@ class Stage {
     }
 
     if (shape.closed) ctx.closePath();
+
+    if (highlight) {
+      // ctx.strokeStyle = 'cyan';
+      // ctx.lineWidth = 4;
+      // ctx.stroke();
+    }
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = shape.stroke || 'transparent';
+    ctx.fillStyle = shape.fill || 'transparent';
 
     ctx.fill();
     ctx.stroke();
@@ -104,15 +111,15 @@ class Stage {
     }
   }
 
-  renderObject(stageObject) {
+  renderObject(stageObject, highlight) {
     if (stageObject instanceof Group) {
       for (var i = 0; i < stageObject.children.length; i++) {
         let child = stageObject.children[i];
-        this.renderObject(child);
+        this.renderObject(child, highlight);
       }
     }
     else if (stageObject instanceof Shape) {
-      this.renderShape(stageObject);
+      this.renderShape(stageObject, highlight);
     }
     if (stageObject.selected) this.renderHints(stageObject);
   }
@@ -123,13 +130,14 @@ class Stage {
 
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
-      this.renderObject(child);
+      this.renderObject(child, this.target == child);
     }
 
     if (this.mode == 'marquee') {
       ctx.save();
       ctx.translate(0.5, 0.5);
       ctx.strokeStyle = 'gray';
+      ctx.globalCompositeOperation = 'exclusion';
       ctx.beginPath();
       // ctx.moveTo(this.marquee[0], this.marquee[1]);
       // ctx.lineTo(this.marquee[2], this.marquee[1]);
@@ -143,7 +151,13 @@ class Stage {
       ctx.stroke();
       ctx.restore();
     }
+  }
 
+  toggleStroke() {
+    if (this.target instanceof Shape) {
+      this.target.stroke = this.target.stroke ? null : 'black';
+      this.render();
+    }
   }
 
   moveSelectionBy(dx, dy) {
@@ -165,7 +179,6 @@ class Stage {
 
   beginMarquee(xmin, ymin, xmax, ymax) {
     this.mode = 'marquee';
-    // this.marquee = [ xmin, ymin, xmax, ymax ];
   }
 
   cancelMarquee() {
@@ -220,15 +233,16 @@ class Stage {
     this.cursorX = event.pageX - this.el.offsetLeft;
     this.cursorY = event.pageY - this.el.offsetTop;
 
+    this.deltaX = this.lastX ? this.cursorX - this.lastX : 0;
+    this.deltaY = this.lastY ? this.cursorY - this.lastY : 0;
+
     if (event.buttons & 1) {
       if (this.mode == 'drag') {
         if (this.selection.length) {
-          this.moveSelectionBy(event.movementX, event.movementY);
+          this.moveSelectionBy(this.deltaX, this.deltaY);
         }
       }
       else if (this.mode == 'marquee') {
-        // this.marquee[2] += event.movementX;
-        // this.marquee[3] += event.movementY;
         this.render();
       }
       else {
@@ -245,6 +259,26 @@ class Stage {
         }
       }
     }
+    else {
+      let hit = this.hitTest(this.cursorX, this.cursorY);
+      if (hit) {
+        this.target = hit;
+      } else {
+        if (this.target) {
+          this.target = null;
+        }
+      }
+    }
+
+    this.lastX = this.cursorX;
+    this.lastY = this.cursorY;
+
+  }
+
+  onKeyDown(event) {
+    if (event.key == 's' && !event.repeat) {
+      this.toggleStroke();
+    }
   }
 
   handleEvent(event) {
@@ -256,6 +290,9 @@ class Stage {
     }
     else if (event.type == 'mousemove') {
       this.onMouseMove(event);
+    }
+    else if (event.type == 'keydown') {
+      this.onKeyDown(event);
     }
   }
 }

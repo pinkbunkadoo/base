@@ -2,7 +2,7 @@ import svg from './svg';
 import Stage from './stage';
 import Paper from './paper';
 import Shape from './display/shape';
-import Graphic from './display/graphic';
+// import Graphic from './display/graphic';
 import Text from './display/text';
 
 class App {
@@ -65,27 +65,6 @@ class App {
     this.stage.add(shape);
   }
 
-  // createGraphic(shapes) {
-  //   let stageEl = this.stage.dom();
-  //
-  //   // localise shape coordinates
-  //   for (var i = 0; i < shapes.length; i++) {
-  //     let shape = shapes[i];
-  //     let bounds = shape.getBounds();
-  //     if (bounds) {
-  //       for (var j = 0; j < shape.points.length; j++) {
-  //         let p = shape.points[j];
-  //         p.x -= bounds.x;
-  //         p.y -= bounds.y;
-  //       }
-  //       shape.x = bounds.x - stageEl.offsetLeft;
-  //       shape.y = bounds.y - stageEl.offsetTop;
-  //     }
-  //   }
-  //   let graphic = new Graphic({ shapes: shapes });
-  //   this.stage.add(graphic);
-  // }
-
   grabPaperShapes() {
     let stageEl = this.stage.dom();
     let shapes = this.paper.getShapes();
@@ -129,6 +108,9 @@ class App {
     } else {
       if (this.mode == 'paper') {
         this.paper.handleEvent(event);
+      }
+      else {
+        this.stage.handleEvent(event);
       }
     }
   }
