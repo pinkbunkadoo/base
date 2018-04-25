@@ -6,6 +6,11 @@ class PointList {
     this.points = points || [];
   }
 
+  // center() {
+  //   let bounds = this.getBounds();
+  //   return new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  // }
+
   getBounds() {
     if (this.points.length) {
       let xmin = Number.POSITIVE_INFINITY;

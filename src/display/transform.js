@@ -17,10 +17,12 @@ class Transform extends EventDispatcher {
 
   set x(value) {
     this._x = value;
+    this.emit('valuechange');
   }
 
   set y(value) {
     this._y = value;
+    this.emit('valuechange');
   }
 
   addedToStage() {

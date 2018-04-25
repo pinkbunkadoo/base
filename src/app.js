@@ -2,7 +2,7 @@ import svg from './svg';
 import Stage from './stage';
 import Paper from './paper';
 import Shape from './display/shape';
-// import Graphic from './display/graphic';
+import Group from './display/group';
 import Text from './display/text';
 
 class App {
@@ -39,10 +39,7 @@ class App {
   startup() {
     console.log('startup');
 
-    // let label = new Text({ title: 'hello' });
-    // label.x = 250;
-    // label.y = 100;
-    // this.stage.add(label);
+    let group = new Group();
 
     let shape = new Shape({
       points: [ { x: 0, y: 0 }, { x: 60, y: 0 }, { x: 40, y: 40 }, { x: 20, y: 10 } ],
@@ -50,9 +47,9 @@ class App {
       stroke: 'black',
       closed: true
     });
-    shape.x = 60;
+    shape.x = -60;
     shape.y = 80;
-    this.stage.add(shape);
+    group.add(shape);
 
     shape = new Shape({
       points: [ { x: 0, y: 0 }, { x: 60, y: 20 }, { x: 100, y: 20 }, { x: 100, y: 70 } ],
@@ -62,17 +59,44 @@ class App {
     });
     shape.x = 150;
     shape.y = 100;
-    this.stage.add(shape);
+    group.add(shape);
+
+    this.stage.add(group);
+
+    group.x = 75;
+    group.y = 50;
   }
 
   grabPaperShapes() {
     let stageEl = this.stage.dom();
     let shapes = this.paper.getShapes();
-    for (var i = 0; i < shapes.length; i++) {
-      let shape = shapes[i];
-      shape.x -= stageEl.offsetLeft;
-      shape.y -= stageEl.offsetTop;
-      this.stage.add(shape);
+
+    if (shapes.length) {
+      let group = new Group();
+      let x = 0;
+      let y = 0;
+      for (var i = 0; i < shapes.length; i++) {
+        let shape = shapes[i];
+        // shape.x -= stageEl.offsetLeft;
+        // shape.y -= stageEl.offsetTop;
+        let bounds = shape.getBounds();
+        x += bounds.x + bounds.width / 2;
+        y += bounds.y + bounds.height / 2;
+      }
+      x /= shapes.length;
+      y /= shapes.length;
+
+      group.x = x;
+      group.y = y;
+
+      for (var i = 0; i < shapes.length; i++) {
+        let shape = shapes[i];
+        shape.x += group.x;
+        shape.y += group.y;
+      }
+
+      group.add(shapes);
+      this.stage.add(group);
     }
   }
 
@@ -105,12 +129,13 @@ class App {
   onKeyDown(event) {
     if (event.key == 'p' && !event.repeat) {
       this.togglePaper();
-    } else {
+    }
+    else if (event.key == 's' && !event.repeat) {
+
+    }
+    else {
       if (this.mode == 'paper') {
         this.paper.handleEvent(event);
-      }
-      else {
-        this.stage.handleEvent(event);
       }
     }
   }

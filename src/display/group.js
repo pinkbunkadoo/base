@@ -1,4 +1,6 @@
+import Rectangle from '../geom/rectangle';
 import Transform from './transform';
+import Shape from './shape';
 
 class Group extends Transform {
   constructor(params={}) {
@@ -6,8 +8,26 @@ class Group extends Transform {
     this.children = [];
   }
 
-  add(child) {
-    this.children.push(child);
+  add(content) {
+    if (content instanceof Array) {
+      for (var i = 0; i < content.length; i++) {
+        let shape = content[i];
+        if (shape instanceof Shape) this.add(shape);
+      }
+    }
+    else if (content instanceof Shape) {
+      this.children.push(content);
+    }
+  }
+
+  hitTest(x, y) {
+    for (var i = 0; i < this.children.length; i++) {
+      let shape = this.children[i];
+      if (shape.hitTest(x - this.x, y - this.y)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getBounds() {
@@ -20,10 +40,10 @@ class Group extends Transform {
     }
 
     if (rects.length) {
-      let xmin = Number.POSITIVE_INFINITY;
-      let ymin = Number.POSITIVE_INFINITY;
-      let xmax = Number.NEGATIVE_INFINITY;
-      let ymax = Number.NEGATIVE_INFINITY;
+      let xmin = 0; //Number.POSITIVE_INFINITY;
+      let ymin = 0; //Number.POSITIVE_INFINITY;
+      let xmax = 0; //Number.NEGATIVE_INFINITY;
+      let ymax = 0; //Number.NEGATIVE_INFINITY;
 
       for (var i = 0; i < rects.length; i++) {
         let rect = rects[i];

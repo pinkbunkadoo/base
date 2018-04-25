@@ -114,7 +114,7 @@ class Paper extends EventDispatcher {
     let ctx = this.canvas.getContext('2d');
     ctx.save();
 
-    ctx.translate(0.5, 0.5);
+    // ctx.translate(0.5, 0.5);
 
     ctx.strokeStyle = shape.stroke || 'transparent';
     ctx.fillStyle = shape.fill || 'transparent';

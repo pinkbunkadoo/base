@@ -6,13 +6,14 @@ class Stage {
   constructor(params={}) {
     this.children = [];
     this.selection = [];
+    this.context = null;
 
     this.el = document.createElement('div');
     this.el.classList.add('stage');
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = params.width || 320;
-    this.canvas.height = params.height || 200;
+    this.canvas.width = window.innerWidth; //params.width || 320;
+    this.canvas.height = window.innerHeight; //params.height || 200;
 
     this.el.appendChild(this.canvas);
 
@@ -28,9 +29,12 @@ class Stage {
     return this.el;
   }
 
-  add(stageObject) {
-    this.children.push(stageObject);
-    stageObject.addedToStage();
+  add(transform) {
+    this.children.push(transform);
+    transform.addedToStage();
+    transform.on('valuechange', () => {
+      this.render();
+    });
     this.render();
   }
 
@@ -60,18 +64,20 @@ class Stage {
     this.render();
   }
 
-  renderShape(shape, highlight) {
+  renderShape(shape, x, y) {
+    // console.log('renderShape', shape);
     let points = shape.getPoints();
 
     let ctx = this.canvas.getContext('2d');
     ctx.save();
 
-    // ctx.translate(0.5, 0.5);
+    ctx.translate(x, y);
 
     ctx.beginPath();
 
     for (var j = 0; j < points.length; j++) {
       let p = points[j];
+      // console.log(p);
       if (j == 0)
         ctx.moveTo(p.x + shape.x, p.y + shape.y);
       else
@@ -80,11 +86,11 @@ class Stage {
 
     if (shape.closed) ctx.closePath();
 
-    if (highlight) {
+    // if (highlight) {
       // ctx.strokeStyle = 'cyan';
       // ctx.lineWidth = 4;
       // ctx.stroke();
-    }
+    // }
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = shape.stroke || 'transparent';
@@ -96,41 +102,60 @@ class Stage {
     ctx.restore();
   }
 
-  renderHints(stageObject) {
-    let ctx = this.canvas.getContext('2d');
-    ctx.strokeStyle = stageObject.selected ? 'red' : 'blue';
-    ctx.beginPath();
-    ctx.arc(stageObject.x >> 0, stageObject.y >> 0, 3, 0, Math.PI * 2, false);
-    ctx.stroke();
-    let bounds = stageObject.getBounds();
-    if (bounds) {
-      ctx.strokeStyle = stageObject.selected ? 'red' : 'blue';
-      ctx.beginPath();
-      ctx.rect((stageObject.x) + bounds.x + 0.5, (stageObject.y) + bounds.y + 0.5, bounds.width, bounds.height);
-      ctx.stroke();
-    }
-  }
+  // renderHints(transform) {
+  //   let ctx = this.canvas.getContext('2d');
+  //   ctx.save();
+  //   ctx.translate(0.5, 0.5);
+  //   ctx.strokeStyle = transform.selected ? 'red' : 'blue';
+  //   ctx.beginPath();
+  //   ctx.arc(transform.x, transform.y, 3, 0, Math.PI * 2, false);
+  //   ctx.stroke();
+  //   let bounds = transform.getBounds();
+  //   if (bounds) {
+  //     ctx.strokeStyle = transform.selected ? 'red' : 'blue';
+  //     ctx.beginPath();
+  //     ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+  //     ctx.stroke();
+  //   }
+  //   ctx.restore();
+  // }
 
-  renderObject(stageObject, highlight) {
-    if (stageObject instanceof Group) {
-      for (var i = 0; i < stageObject.children.length; i++) {
-        let child = stageObject.children[i];
-        this.renderObject(child, highlight);
+  renderObject(transform) {
+    if (transform instanceof Group) {
+      for (var i = 0; i < transform.children.length; i++) {
+        let child = transform.children[i];
+        this.renderShape(child, transform.x, transform.y);
       }
     }
-    else if (stageObject instanceof Shape) {
-      this.renderShape(stageObject, highlight);
-    }
-    if (stageObject.selected) this.renderHints(stageObject);
+    // if (transform.selected) this.renderHints(transform);
+  }
+
+  renderHints() {
+    let size = 50;
+    let ctx = this.canvas.getContext('2d');
+    let x = (this.canvas.width / 2) >> 0;
+    let y = (this.canvas.height / 2) >> 0;
+    ctx.save();
+    ctx.translate(0.5, 0.5);
+    ctx.beginPath();
+    ctx.strokeStyle = 'lightgray';
+    ctx.moveTo(x - size, y);
+    ctx.lineTo(x + size, y);
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x, y + size);
+    ctx.stroke();
+    ctx.restore();
   }
 
   render() {
     let ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    // this.renderHints();
+
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
-      this.renderObject(child, this.target == child);
+      this.renderObject(child);
     }
 
     if (this.mode == 'marquee') {
@@ -139,10 +164,6 @@ class Stage {
       ctx.strokeStyle = 'gray';
       ctx.globalCompositeOperation = 'exclusion';
       ctx.beginPath();
-      // ctx.moveTo(this.marquee[0], this.marquee[1]);
-      // ctx.lineTo(this.marquee[2], this.marquee[1]);
-      // ctx.lineTo(this.marquee[2], this.marquee[3]);
-      // ctx.lineTo(this.marquee[0], this.marquee[3]);
       ctx.moveTo(this.downX, this.downY);
       ctx.lineTo(this.cursorX, this.downY);
       ctx.lineTo(this.cursorX, this.cursorY);
@@ -151,13 +172,7 @@ class Stage {
       ctx.stroke();
       ctx.restore();
     }
-  }
 
-  toggleStroke() {
-    if (this.target instanceof Shape) {
-      this.target.stroke = this.target.stroke ? null : 'black';
-      this.render();
-    }
   }
 
   moveSelectionBy(dx, dy) {
@@ -260,14 +275,14 @@ class Stage {
       }
     }
     else {
-      let hit = this.hitTest(this.cursorX, this.cursorY);
-      if (hit) {
-        this.target = hit;
-      } else {
-        if (this.target) {
-          this.target = null;
-        }
-      }
+      // let hit = this.hitTest(this.cursorX, this.cursorY);
+      // if (hit) {
+      //   this.target = hit;
+      // } else {
+      //   if (this.target) {
+      //     this.target = null;
+      //   }
+      // }
     }
 
     this.lastX = this.cursorX;
@@ -276,9 +291,9 @@ class Stage {
   }
 
   onKeyDown(event) {
-    if (event.key == 's' && !event.repeat) {
-      this.toggleStroke();
-    }
+    // if (event.key == 's' && !event.repeat) {
+    //   this.toggleStroke();
+    // }
   }
 
   handleEvent(event) {

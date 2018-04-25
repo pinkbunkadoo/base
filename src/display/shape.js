@@ -14,14 +14,13 @@ class Shape extends Transform {
     this.closed = params.closed || false;
 
     this.pointList = new PointList(params.points);
-    // let bounds = this.pointList.getBounds();
-    // this.x = bounds.x + bounds.width / 2;
-    // this.y = bounds.y + bounds.height / 2;
+
+    // let center = this.pointList.center();
+    // this.x = center.x;
+    // this.y = center.y;
     //
-    // let points = this.pointList.points;
-    //
-    // for (var i = 0; i < points.length; i++) {
-    //   let p = points[i];
+    // for (var i = 0; i < this.pointsList.points.length; i++) {
+    //   let p = this.pointsList.points[i];
     //   p.x -= this.x;
     //   p.y -= this.y;
     // }
@@ -32,7 +31,10 @@ class Shape extends Transform {
   }
 
   getBounds() {
-    return this.pointList.getBounds();
+    let bounds = this.pointList.getBounds();
+    bounds.x += this.x;
+    bounds.y += this.y;
+    return bounds;
   }
 
   intersectsRectangle(xmin, ymin, xmax, ymax) {
@@ -55,7 +57,7 @@ class Shape extends Transform {
       return Util.pointInPolygon(points, x - this.x, y - this.y);
     }
     else {
-      
+
     }
   }
 }
