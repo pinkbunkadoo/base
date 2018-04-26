@@ -38,6 +38,23 @@ class Stage {
     this.render();
   }
 
+  edit() {
+    if (this.context) {
+    }
+    else {
+      if (this.selection.length) {
+        this.context = this.selection[0];
+      }
+      else {
+        let group = new Group();
+        group.x = (this.canvas.width / 2) >> 0;
+        group.y = (this.canvas.height / 2) >> 0;
+        this.context = group;
+      }
+    }
+    this.render();
+  }
+
   selectMarquee(xmin, ymin, xmax, ymax) {
     if (xmin > xmax) [xmin, xmax] = [ xmax, xmin ];
     if (ymin > ymax) [ymin, ymax] = [ ymax, ymin ];
@@ -130,11 +147,11 @@ class Stage {
     // if (transform.selected) this.renderHints(transform);
   }
 
-  renderHints() {
-    let size = 50;
+  renderHints(x, y) {
+    let size = 10;
     let ctx = this.canvas.getContext('2d');
-    let x = (this.canvas.width / 2) >> 0;
-    let y = (this.canvas.height / 2) >> 0;
+    // let x = (this.canvas.width / 2) >> 0;
+    // let y = (this.canvas.height / 2) >> 0;
     ctx.save();
     ctx.translate(0.5, 0.5);
     ctx.beginPath();
@@ -151,11 +168,17 @@ class Stage {
     let ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // this.renderHints();
-
     for (var i = 0; i < this.children.length; i++) {
       let child = this.children[i];
       this.renderObject(child);
+    }
+
+    if (this.context) {
+      ctx.fillStyle = 'white';
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.globalAlpha = 1;
+      this.renderAxis(this.context.x, this.context.y);
     }
 
     if (this.mode == 'marquee') {

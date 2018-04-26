@@ -130,8 +130,8 @@ class App {
     if (event.key == 'p' && !event.repeat) {
       this.togglePaper();
     }
-    else if (event.key == 's' && !event.repeat) {
-
+    else if (event.key == 'e' && !event.repeat) {
+      this.stage.edit();
     }
     else {
       if (this.mode == 'paper') {
