@@ -1,6 +1,7 @@
 import Util from './util';
 import Shape from './display/shape';
 import Group from './display/group';
+import Paper from './paper/paper';
 
 class Stage {
   constructor(params={}) {
@@ -8,21 +9,26 @@ class Stage {
     this.selection = [];
     this.context = null;
 
+    this.paper = new Paper({ visible: false });
+
     this.el = document.createElement('div');
     this.el.classList.add('stage');
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = window.innerWidth; //params.width || 320;
-    this.canvas.height = window.innerHeight; //params.height || 200;
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
 
     this.el.appendChild(this.canvas);
 
-    this.cursor = document.createElement('div');
-    this.cursor.classList.add('stage-cursor');
+    // this.cursor = document.createElement('div');
+    // this.cursor.classList.add('stage-cursor');
+
+    // this.el.appendChild(this.paper.dom());
 
     window.addEventListener('mousedown', this);
     window.addEventListener('mouseup', this);
     window.addEventListener('mousemove', this);
+    window.addEventListener('dblclick', this);
   }
 
   dom() {
@@ -39,10 +45,12 @@ class Stage {
   }
 
   edit() {
+    // console.log('edit');
     if (this.context) {
     }
     else {
       if (this.selection.length) {
+        // console.log('selection');
         this.context = this.selection[0];
       }
       else {
@@ -82,7 +90,6 @@ class Stage {
   }
 
   renderShape(shape, x, y) {
-    // console.log('renderShape', shape);
     let points = shape.getPoints();
 
     let ctx = this.canvas.getContext('2d');
@@ -94,7 +101,6 @@ class Stage {
 
     for (var j = 0; j < points.length; j++) {
       let p = points[j];
-      // console.log(p);
       if (j == 0)
         ctx.moveTo(p.x + shape.x, p.y + shape.y);
       else
@@ -102,12 +108,6 @@ class Stage {
     }
 
     if (shape.closed) ctx.closePath();
-
-    // if (highlight) {
-      // ctx.strokeStyle = 'cyan';
-      // ctx.lineWidth = 4;
-      // ctx.stroke();
-    // }
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = shape.stroke || 'transparent';
@@ -119,23 +119,23 @@ class Stage {
     ctx.restore();
   }
 
-  // renderHints(transform) {
-  //   let ctx = this.canvas.getContext('2d');
-  //   ctx.save();
-  //   ctx.translate(0.5, 0.5);
-  //   ctx.strokeStyle = transform.selected ? 'red' : 'blue';
-  //   ctx.beginPath();
-  //   ctx.arc(transform.x, transform.y, 3, 0, Math.PI * 2, false);
-  //   ctx.stroke();
-  //   let bounds = transform.getBounds();
-  //   if (bounds) {
-  //     ctx.strokeStyle = transform.selected ? 'red' : 'blue';
-  //     ctx.beginPath();
-  //     ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-  //     ctx.stroke();
-  //   }
-  //   ctx.restore();
-  // }
+  renderHints(transform) {
+    let ctx = this.canvas.getContext('2d');
+    ctx.save();
+    ctx.translate(0.5, 0.5);
+    ctx.strokeStyle = transform.selected ? 'red' : 'blue';
+    ctx.beginPath();
+    ctx.arc(transform.x, transform.y, 3, 0, Math.PI * 2, false);
+    ctx.stroke();
+    let bounds = transform.getBounds();
+    if (bounds) {
+      ctx.strokeStyle = transform.selected ? 'red' : 'blue';
+      ctx.beginPath();
+      ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   renderObject(transform) {
     if (transform instanceof Group) {
@@ -144,14 +144,12 @@ class Stage {
         this.renderShape(child, transform.x, transform.y);
       }
     }
-    // if (transform.selected) this.renderHints(transform);
+    if (transform.selected) this.renderHints(transform);
   }
 
-  renderHints(x, y) {
+  renderAxis(x, y) {
     let size = 10;
     let ctx = this.canvas.getContext('2d');
-    // let x = (this.canvas.width / 2) >> 0;
-    // let y = (this.canvas.height / 2) >> 0;
     ctx.save();
     ctx.translate(0.5, 0.5);
     ctx.beginPath();
@@ -234,7 +232,12 @@ class Stage {
     return null;
   }
 
+  showPaper() {
+
+  }
+
   onMouseDown(event) {
+    // console.log('down');
     this.cursorX = event.pageX - this.el.offsetLeft;
     this.cursorY = event.pageY - this.el.offsetTop;
 
@@ -314,9 +317,10 @@ class Stage {
   }
 
   onKeyDown(event) {
-    // if (event.key == 's' && !event.repeat) {
-    //   this.toggleStroke();
-    // }
+  }
+
+  onDblClick(event) {
+    this.edit();
   }
 
   handleEvent(event) {
@@ -328,6 +332,9 @@ class Stage {
     }
     else if (event.type == 'mousemove') {
       this.onMouseMove(event);
+    }
+    else if (event.type == 'dblclick') {
+      this.onDblClick(event);
     }
     else if (event.type == 'keydown') {
       this.onKeyDown(event);

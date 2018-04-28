@@ -63,3 +63,27 @@ html body {
   cursor: none;
   pointer-events: none;
 }
+
+.pointer-cursor {
+  position: absolute;
+  /* background-color: rgba(0, 0, 0, 0.2); */
+  width: 4px;
+  height: 4px;
+  border-left: 1px solid black;
+  border-top: 1px solid black;
+  /* margin-left: -2px; */
+  /* margin-top: -2px; */
+  cursor: none;
+  pointer-events: none;
+}
+
+.pencil-cursor {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  margin-top: -2px;
+  cursor: none;
+  pointer-events: none;
+}
