@@ -6,10 +6,14 @@ class PointList {
     this.points = points || [];
   }
 
-  // center() {
-  //   let bounds = this.getBounds();
-  //   return new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-  // }
+  copy() {
+    let points = [];
+    for (var i = 0; i < this.points.length; i++) {
+      let p = this.points[i];
+      points.push(new Point(p.x, p.y));
+    }
+    return new PointList(points);
+  }
 
   getBounds() {
     if (this.points.length) {

@@ -25,32 +25,23 @@ class PencilTool extends Tool {
         p.x -= x;
         p.y -= y;
       }
-      let shape = new Shape({ points: pointList.points, closed: closed, fill: this.fill, stroke: this.stroke });
+      let shape = new Shape({ pointList: pointList, fill: this.fill, stroke: this.stroke, closed: closed });
       let p = paper.screenToWorld(x, y);
       shape.x = p.x;
       shape.y = p.y;
-      // console.log(shape.x, shape.y);
       this.emit('shape', shape);
       this.points = [];
     }
-    // this.points = [];
-    // this.render();
   }
 
   drawPath(ctx, points, stroke, fill, closed=false) {
-    // let points = params.points || [];
-    // let ctx = this.canvas.getContext('2d');
-    // ctx.save();
-
     ctx.strokeStyle = stroke !== undefined ? (stroke ? stroke : 'transparent') : 'transparent';
     ctx.fillStyle = fill !== undefined ? (fill ? fill : 'transparent') : 'transparent';
-
     if (stroke == null) {
       ctx.strokeStyle = 'cyan';
     }
 
     ctx.beginPath();
-
     for (var i = 0; i < points.length; i++) {
       let p = points[i];
       if (i == 0)

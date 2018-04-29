@@ -127,7 +127,7 @@ class Paper extends Editor {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.renderAxis(this.canvas.width / 2, this.canvas.height / 2);
+    this.renderAxis((this.canvas.width / 2) >> 0, (this.canvas.height / 2) >> 0);
 
     for (let i = 0; i < this.shapes.length; i++) {
       let shape = this.shapes[i];
