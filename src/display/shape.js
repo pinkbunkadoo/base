@@ -10,26 +10,14 @@ class Shape extends Transform {
 
     this.fill = params.fill || null;
     this.stroke = params.stroke || null;
-    // this.strokeWidth = params.strokeWidth || 1;
     this.closed = params.closed || false;
+    // this.strokeWidth = params.strokeWidth || 1;
 
-    // this.pointList = new PointList(params.points);
-    this.pointsList = params.pointList;
-
-    // let center = this.pointList.center();
-    // this.x = center.x;
-    // this.y = center.y;
-    //
-    // for (var i = 0; i < this.pointsList.points.length; i++) {
-    //   let p = this.pointsList.points[i];
-    //   p.x -= this.x;
-    //   p.y -= this.y;
-    // }
+    this.pointList = params.pointList.copy();
   }
 
   copy() {
-    let pointList = this.pointList.copy();
-    return new Shape({ pointList: pointList, stroke: this.stroke, fill: this.fill, closed: this.closed });
+    return new Shape({ pointList: this.pointList, stroke: this.stroke, fill: this.fill, closed: this.closed });
   }
 
   getPoints() {

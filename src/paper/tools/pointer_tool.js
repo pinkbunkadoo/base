@@ -5,16 +5,12 @@ class PointerTool extends Tool {
     super();
     this.cursor = document.createElement('div');
     this.cursor.classList.add('pointer-cursor');
-
-    // this.selection = [];
-    // console.log('Paper tool:', paper.toolName);
   }
 
   hitTest(x, y) {
     let sp = paper.screenToWorld(x, y);
     for (var i = paper.shapes.length - 1; i >= 0; i--) {
       let shape = paper.shapes[i];
-      // let p = paper.worldToScreen(shape.x, shape.y);
       if (shape.hitTest(sp.x, sp.y)) {
         return shape;
       }
@@ -39,7 +35,6 @@ class PointerTool extends Tool {
   }
 
   moveSelectionBy(dx, dy) {
-    // console.log('moveby', dx, dy);
     for (var i = 0; i < paper.selection.length; i++) {
       let shape = paper.selection[i];
       shape.x += dx;
@@ -50,41 +45,18 @@ class PointerTool extends Tool {
 
   dragOn() {
     this.mode = 'drag';
-    // console.log('drag');
   }
 
   dragOff() {
     this.mode = null;
-    // console.log('dragoff');
   }
 
   render(ctx) {
-    // console.log('render', this.selection);
-
-    // ctx.translate(0.5, 0.5);
-    // ctx.strokeStyle = 'gray';
-    // ctx.globalCompositeOperation = 'exclusion';
-    // ctx.beginPath();
-    // ctx.moveTo(this.downX, this.downY);
-    // ctx.lineTo(this.cursorX, this.downY);
-    // ctx.lineTo(this.cursorX, this.cursorY);
-    // ctx.lineTo(this.downX, this.cursorY);
-    // ctx.closePath();
-    // ctx.stroke();
-
-    // ctx.strokeStyle = 'red';
-    //
-    // for (var i = 0; i < paper.selection.length; i++) {
-    //   let shape = paper.selection[i];
-    //   ctx.beginPath();
-    //   ctx.arc(shape.x >> 0, shape.y >> 0, 3, 0, Math.PI * 2);
-    //   ctx.stroke();
-    // }
   }
 
   onMouseDown(event) {
-    this.cursorX = event.offsetX;
-    this.cursorY = event.offsetY;
+    this.cursorX = event.pageX;
+    this.cursorY = event.pageY;
     this.downX = this.cursorX;
     this.downY = this.cursorY;
 
@@ -105,8 +77,8 @@ class PointerTool extends Tool {
   }
 
   onMouseMove(event) {
-    this.cursorX = event.offsetX;
-    this.cursorY = event.offsetY;
+    this.cursorX = event.pageX;
+    this.cursorY = event.pageY;
 
     this.deltaX = this.lastX ? this.cursorX - this.lastX : 0;
     this.deltaY = this.lastY ? this.cursorY - this.lastY : 0;
@@ -127,7 +99,6 @@ class PointerTool extends Tool {
 
     this.lastX = this.cursorX;
     this.lastY = this.cursorY;
-    // this.emit('update');
   }
 
   onDblClick(event) {

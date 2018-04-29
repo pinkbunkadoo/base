@@ -3,16 +3,17 @@ import Rectangle from './rectangle';
 
 class PointList {
   constructor(points) {
-    this.points = points || [];
+    this.points = [];
+    if (points) {
+      for (var i = 0; i < points.length; i++) {
+        let p = points[i];
+        this.points.push(new Point(p.x, p.y));
+      }
+    }
   }
 
   copy() {
-    let points = [];
-    for (var i = 0; i < this.points.length; i++) {
-      let p = this.points[i];
-      points.push(new Point(p.x, p.y));
-    }
-    return new PointList(points);
+    return new PointList(this.points);
   }
 
   getBounds() {

@@ -1,18 +1,14 @@
 import Point from '../geom/point';
 import Vector from '../geom/vector';
 import Circle from '../geom/circle';
+
 import Shape from '../display/shape';
+import Frame from '../display/frame';
+import Sequence from '../display/sequence';
+
 import Editor from '../editor';
 import PointerTool from './tools/pointer_tool';
 import PencilTool from './tools/pencil_tool';
-
-// let SNAP_RADIUS = 3;
-// let COLORS = [
-//   'white',
-//   'lightgray',
-//   'gray',
-//   'black'
-// ];
 
 class Paper extends Editor {
   constructor() {
@@ -24,6 +20,7 @@ class Paper extends Editor {
     this.stroke = null;
 
     this.selection = [];
+    this.sequence = [];
 
     this.el = document.createElement('div');
     this.el.classList.add('paper');
@@ -35,15 +32,12 @@ class Paper extends Editor {
     this.el.appendChild(this.canvas);
 
     this.cursor = document.createElement('div');
-    // this.cursor.classList.add('pointer-cursor');
 
     this.cursorX = 0;
     this.cursorY = 0;
 
-    // this.cursor.classList.add('paper-cursor');
-    // this.el.appendChild(this.cursor);
+    this.addFrame();
 
-    // console.log('Paper');
     this.setTool('pencil');
   }
 
@@ -57,11 +51,6 @@ class Paper extends Editor {
     let ctx = this.canvas.getContext('2d');
     ctx.save();
 
-    // let tx = this.canvas.width / 2;
-    // let ty = this.canvas.height / 2;
-
-    // ctx.translate(0.5, 0.5);
-
     ctx.strokeStyle = shape.stroke || 'transparent';
     ctx.fillStyle = shape.fill || 'transparent';
 
@@ -71,8 +60,6 @@ class Paper extends Editor {
 
     for (var j = 0; j < points.length; j++) {
       let p = points[j];
-      // let x = (p.x + sp.x) >> 0;
-      // let y = (p.y + sp.y) >> 0;
       let x = (p.x + sp.x);
       let y = (p.y + sp.y);
 
@@ -162,6 +149,12 @@ class Paper extends Editor {
 
   }
 
+  addFrame() {
+    let frame = new Frame();
+    this.sequence.add(frame);
+    this.frame = frame;
+  }
+
   screenToWorld(x, y) {
     let tx = this.canvas.width / 2;
     let ty = this.canvas.height / 2;
@@ -225,6 +218,7 @@ class Paper extends Editor {
           this.render();
         });
         this.tool.on('shape', (shape) => {
+          // console.log(shape);
           this.shapes.push(shape);
         });
       }
@@ -234,6 +228,13 @@ class Paper extends Editor {
       this.toolName = toolName;
       this.setCursor(this.tool.cursor);
       this.render();
+    }
+  }
+
+  goFrame(frameNo) {
+    if (frameNo >= 0 && frameNo < this.sequence.length) {
+      this.frameNo = frameNo;
+      // this.
     }
   }
 
@@ -294,10 +295,12 @@ class Paper extends Editor {
   }
 
   onMouseMove(event) {
-    this.cursorX = event.offsetX;
-    this.cursorY = event.offsetY;
+    this.cursorX = event.pageX;
+    this.cursorY = event.pageY;
     this.cursor.style.left = this.cursorX + 'px';
     this.cursor.style.top = this.cursorY + 'px';
+    // if (event.buttons & 1)
+      // console.log(this.cursorX);
   }
 
   onDblClick(event) {
@@ -309,6 +312,12 @@ class Paper extends Editor {
     }
     else if (event.key == 'b' && !event.repeat) {
       this.setTool('pencil');
+    }
+    else if (event.key == '.' && !event.repeat) {
+      this.goFrame(this.frameNo + 1);
+    }
+    else if (event.key == ',' && !event.repeat) {
+      this.goFrame(this.frameNo - 1);
     }
     // if (event.key == 's' && !event.repeat) {
     //   this.setStroke(this.stroke ? null : 'black')

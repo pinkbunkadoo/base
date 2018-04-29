@@ -37,6 +37,7 @@ class PencilTool extends Tool {
   drawPath(ctx, points, stroke, fill, closed=false) {
     ctx.strokeStyle = stroke !== undefined ? (stroke ? stroke : 'transparent') : 'transparent';
     ctx.fillStyle = fill !== undefined ? (fill ? fill : 'transparent') : 'transparent';
+
     if (stroke == null) {
       ctx.strokeStyle = 'cyan';
     }
@@ -53,14 +54,10 @@ class PencilTool extends Tool {
     if (closed) ctx.closePath();
     ctx.fill();
     ctx.stroke();
-
-    // ctx.restore();
   }
 
   render(ctx) {
     if (this.points.length) {
-      // ctx.translate(0.5, 0.5);
-
       this.drawPath(ctx, this.points, this.stroke, this.fill);
 
       ctx.strokeStyle = 'blue';
@@ -72,7 +69,9 @@ class PencilTool extends Tool {
 
       let cp = new Point(this.cursorX, this.cursorY);
       let p0 = this.points[0];
+
       if (cp.distance(p0) < 5) {
+        ctx.beginPath();
         ctx.arc(p0.x, p0.y, 5, 0, Math.PI * 2);
         ctx.stroke();
       }
