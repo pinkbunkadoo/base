@@ -30,17 +30,6 @@ html body {
   z-index: 1000;
 }
 
-/* .stage-object {
-  position: absolute;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: default;
-} */
-
-/* .stage-object.selected {
-  background-color: rgba(255, 0, 0, 0.2);
-} */
-
 .paper {
   position: absolute;
   top: 0px;
@@ -48,7 +37,7 @@ html body {
   width: 100vw;
   height: 100vh;
   z-index: 500;
-  background-color: rgba(255, 255, 255, 0.5);
+  /* background-color: rgba(255, 255, 255, 0.5); */
   cursor: none;
   overflow: hidden;
 }

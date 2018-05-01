@@ -1,11 +1,22 @@
 
 class Frame {
   constructor() {
-    this.groups = [];
+    this.shapes = [];
   }
 
-  add(group) {
-    this.groups.push(group);
+  add(shape) {
+    this.shapes.push(shape);
+  }
+
+  remove(shape) {
+    let index = this.shapes.indexOf(shape);
+    if (index !== -1) {
+      this.shapes.splice(index, 1);
+    }
+  }
+
+  clear() {
+    this.shapes = [];
   }
 }
 

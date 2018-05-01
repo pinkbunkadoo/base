@@ -20,7 +20,7 @@ class Paper extends Editor {
     this.stroke = null;
 
     this.selection = [];
-    this.sequence = [];
+    this.sequence = new Sequence();
 
     this.el = document.createElement('div');
     this.el.classList.add('paper');
@@ -31,14 +31,13 @@ class Paper extends Editor {
 
     this.el.appendChild(this.canvas);
 
-    this.cursor = document.createElement('div');
-
     this.cursorX = 0;
     this.cursorY = 0;
 
     this.addFrame();
+    this.goFrame(0);
 
-    this.setTool('pencil');
+    this.setTool('pointer');
   }
 
   dom() {
@@ -77,6 +76,35 @@ class Paper extends Editor {
     ctx.restore();
   }
 
+  drawOutline(shape, stroke) {
+    let ctx = this.canvas.getContext('2d');
+    ctx.save();
+
+    ctx.strokeStyle = stroke || 'black';
+
+    ctx.beginPath();
+
+    let sp = this.worldToScreen(shape.x, shape.y);
+    let points = shape.getPoints();
+
+    for (var j = 0; j < points.length; j++) {
+      let p = points[j];
+      let x = (p.x + sp.x);
+      let y = (p.y + sp.y);
+
+      if (j == 0)
+        ctx.moveTo(x, y);
+      else
+        ctx.lineTo(x, y);
+    }
+
+    if (shape.closed) ctx.closePath();
+
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
   renderAxis(x, y) {
     let size = 20;
     let ctx = this.canvas.getContext('2d');
@@ -97,12 +125,11 @@ class Paper extends Editor {
     ctx.save();
     if (this.selection.length) {
       ctx.strokeStyle = 'red';
-      // ctx.translate(0.5, 0.5);
       for (var i = 0; i < this.selection.length; i++) {
         let shape = this.selection[i];
         let p = this.worldToScreen(shape.x, shape.y);
         ctx.beginPath();
-        ctx.arc(p.x>>0, p.y>>0, 3, 0, Math.PI * 2);
+        ctx.arc(p.x >> 0, p.y >> 0, 3, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
@@ -116,8 +143,16 @@ class Paper extends Editor {
 
     this.renderAxis((this.canvas.width / 2) >> 0, (this.canvas.height / 2) >> 0);
 
-    for (let i = 0; i < this.shapes.length; i++) {
-      let shape = this.shapes[i];
+    if (this.frameNo > 0) {
+      let frame = this.sequence.getFrame(this.frameNo - 1);
+      for (let i = 0; i < frame.shapes.length; i++) {
+        let shape = frame.shapes[i];
+        this.drawOutline(shape, 'rgb(192, 240, 192)');
+      }
+    }
+
+    for (let i = 0; i < this.frame.shapes.length; i++) {
+      let shape = this.frame.shapes[i];
       this.drawShape(shape);
     }
 
@@ -129,30 +164,10 @@ class Paper extends Editor {
       ctx.restore();
     }
 
-    // if (this.points.length) {
-    //   this.drawPath({ points: this.points, fill: this.fill, stroke: this.stroke });
-    //
-    //   ctx.strokeStyle = 'blue';
-    //   ctx.beginPath();
-    //   let p = this.points[this.points.length - 1];
-    //   ctx.moveTo(p.x, p.y);
-    //   ctx.lineTo(this.cursorX, this.cursorY);
-    //   ctx.stroke();
-    //
-    //   let cp = new Point(this.cursorX, this.cursorY);
-    //   let p0 = this.points[0];
-    //   if (cp.distance(p0) < SNAP_RADIUS) {
-    //     ctx.arc(p0.x, p0.y, 5, 0, Math.PI * 2);
-    //     ctx.stroke();
-    //   }
-    // }
-
-  }
-
-  addFrame() {
-    let frame = new Frame();
-    this.sequence.add(frame);
-    this.frame = frame;
+    ctx.textBaseline = 'top';
+    ctx.font = '18px sans-serif';
+    ctx.fillStyle = 'black';
+    ctx.fillText((this.frameNo + 1) + ':' + this.sequence.length, 20, 20);
   }
 
   screenToWorld(x, y) {
@@ -167,14 +182,12 @@ class Paper extends Editor {
     return new Point(x + tx, y + ty);
   }
 
-  getShapes() {
-    return this.shapes;
+  addShape(shape) {
+    this.frame.add(shape);
   }
 
-  clear() {
-    // this.points = [];
-    // this.shapes = [];
-    // this.render();
+  getShapes() {
+    return this.shapes;
   }
 
   // setFill(fill) {
@@ -188,7 +201,6 @@ class Paper extends Editor {
   // }
 
   setCursor(cursor) {
-    // console.log('setCuror', cursor);
     if (this.el.contains(this.cursor)) {
       this.el.removeChild(this.cursor);
     }
@@ -218,77 +230,64 @@ class Paper extends Editor {
           this.render();
         });
         this.tool.on('shape', (shape) => {
-          // console.log(shape);
-          this.shapes.push(shape);
+          // this.shapes.push(shape);
+          this.addShape(shape);
         });
       }
       else {
         return;
       }
       this.toolName = toolName;
-      this.setCursor(this.tool.cursor);
+      if (this.tool.cursor) this.setCursor(this.tool.cursor);
       this.render();
     }
   }
 
-  goFrame(frameNo) {
-    if (frameNo >= 0 && frameNo < this.sequence.length) {
-      this.frameNo = frameNo;
-      // this.
+  addFrame(index) {
+    let frame = new Frame();
+    if (index !== undefined)
+      this.sequence.add(frame, index);
+    else
+      this.sequence.add(frame);
+  }
+
+  clearFrame() {
+    this.frame.clear();
+    this.render();
+  }
+
+  deleteFrame(index) {
+    if (this.sequence.length == 1) {
+      this.clearFrame();
+    }
+    else {
+      this.sequence.remove(index);
+      this.goFrame(index);
     }
   }
 
-  select(shape) {
-    // this.selection = [ shape ];
-    // this.render();
-    // console.log('select', shape);
+  goFrame(frameNo) {
+    if (frameNo < 0) frameNo = 0;
+    if (frameNo > this.sequence.length - 1) frameNo = this.sequence.length - 1;
+    let frame = this.sequence.getFrame(frameNo);
+    if (frame) {
+      this.frame = frame;
+      this.frameNo = frameNo;
+      this.selection = [];
+      this.render();
+    }
   }
 
-  // selectMarquee(xmin, ymin, xmax, ymax) {
-  //   if (xmin > xmax) [xmin, xmax] = [ xmax, xmin ];
-  //   if (ymin > ymax) [ymin, ymax] = [ ymax, ymin ];
-  //   let selection = [];
-  //   for (var i = 0; i < this.children.length; i++) {
-  //     let child = this.children[i];
-  //     if (child instanceof Shape) {
-  //       if (child.intersectsRectangle(xmin, ymin, xmax, ymax)) {
-  //         selection.push(child);
-  //         child.select();
-  //       }
-  //     }
-  //   }
-  //   this.selection = selection;
-  // }
-
-  // hitTest(x, y) {
-  //   for (var i = this.shapes.length - 1; i >= 0; i--) {
-  //     let child = this.shapes[i];
-  //     if (child.hitTest(x, y)) {
-  //       return child;
-  //     }
-  //   }
-  //   return null;
-  // }
+  deleteSelected() {
+    for (var i = 0; i < this.selection.length; i++) {
+      let shape = this.selection[i];
+      this.frame.remove(shape);
+    }
+    this.selection = [];
+    this.render();
+  }
 
   onMouseDown(event) {
-    // this.downX = event.offsetX;
-    // this.downY = event.offsetY;
-    //
-    // let hit = this.hitTest(this.cursorX, this.cursorY);
-    // if (hit) {
-    //   if (this.selection.includes(hit)) {
-    //
-    //   } else {
-    //     this.deselect();
-    //     this.selection = [ hit ];
-    //     hit.select();
-    //   }
-    // }
-    // else {
-    //   this.deselect();
-    // }
-    //
-    // this.render();
   }
 
   onMouseUp(event) {
@@ -297,27 +296,42 @@ class Paper extends Editor {
   onMouseMove(event) {
     this.cursorX = event.pageX;
     this.cursorY = event.pageY;
-    this.cursor.style.left = this.cursorX + 'px';
-    this.cursor.style.top = this.cursorY + 'px';
-    // if (event.buttons & 1)
-      // console.log(this.cursorX);
+    if (this.cursor) {
+      this.cursor.style.left = this.cursorX + 'px';
+      this.cursor.style.top = this.cursorY + 'px';
+    }
   }
 
   onDblClick(event) {
   }
 
   onKeyDown(event) {
+    // console.log(event.key, event.shiftKey);
     if (event.key == 'q' && !event.repeat) {
       this.setTool('pointer');
     }
     else if (event.key == 'b' && !event.repeat) {
       this.setTool('pencil');
     }
-    else if (event.key == '.' && !event.repeat) {
+    else if ((event.key == '.' || event.key == '>') && !event.repeat) {
+      if (event.shiftKey) {
+        this.addFrame(this.frameNo + 1);
+      }
       this.goFrame(this.frameNo + 1);
     }
-    else if (event.key == ',' && !event.repeat) {
-      this.goFrame(this.frameNo - 1);
+    else if ((event.key == ',' || event.key == '<') && !event.repeat) {
+      if (event.shiftKey) {
+        this.addFrame(this.frameNo);
+        this.goFrame(this.frameNo);
+      } else {
+        this.goFrame(this.frameNo - 1);
+      }
+    }
+    else if (event.key == 'x' && !event.repeat) {
+      this.deleteSelected();
+    }
+    else if (event.key == 'X' && !event.repeat) {
+      this.deleteFrame(this.frameNo);
     }
     // if (event.key == 's' && !event.repeat) {
     //   this.setStroke(this.stroke ? null : 'black')
