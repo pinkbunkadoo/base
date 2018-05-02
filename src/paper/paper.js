@@ -44,6 +44,12 @@ class Paper extends Editor {
     return this.el;
   }
 
+  setSize(width, height) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.render();
+  }
+
   drawShape(shape) {
     let points = shape.getPoints();
 

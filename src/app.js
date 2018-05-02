@@ -25,47 +25,16 @@ class App {
     window.addEventListener('contextmenu', this);
     window.addEventListener('focus', this);
     window.addEventListener('blur', this);
+    window.addEventListener('resize', this);
   }
 
   startup() {
-    // console.log('startup');
-
-    // let group = new Group();
-    //
-    // let shape = new Shape({
-    //   points: [ { x: 0, y: 0 }, { x: 60, y: 0 }, { x: 40, y: 40 }, { x: 20, y: 10 } ],
-    //   fill: '#cccccc',
-    //   stroke: 'black',
-    //   closed: true
-    // });
-    // shape.x = -60;
-    // shape.y = 80;
-    // group.add(shape);
-    //
-    // shape = new Shape({
-    //   points: [ { x: 0, y: 0 }, { x: 60, y: 20 }, { x: 100, y: 20 }, { x: 100, y: 70 } ],
-    //   fill: '#cccccc',
-    //   stroke: null,
-    //   closed: true
-    // });
-    // shape.x = 150;
-    // shape.y = 100;
-    // group.add(shape);
-    //
-    // this.stage.add(group);
-    //
-    // group.x = 75;
-    // group.y = 50;
-
     this.dom.app = document.getElementById('app');
 
     this.paper = new Paper();
     this.setEditor(this.paper);
 
     global.paper = this.paper;
-
-    // this.paper.show();
-    // this.editor = this.paper;
   }
 
   grabPaperShapes() {
@@ -111,34 +80,6 @@ class App {
     }
   }
 
-  // hideArea() {
-  //   if (this.area == 'paper') {
-  //     this.hidePaper();
-  //   }
-  // }
-  //
-  // showArea(area) {
-  //   if (area !== this.area) {
-  //     this.hideArea();
-  //     if (area == 'paper') {
-  //       this.showPaper();
-  //     }
-  //     else if (area == 'stage') {
-  //
-  //     }
-  //   }
-  // }
-  //
-  // showPaper() {
-  //   this.dom.app.appendChild(this.paper.dom());
-  //   this.area = 'paper';
-  // }
-  //
-  // hidePaper() {
-  //   this.dom.app.removeChild(this.dom.app.firstChild);
-  //   this.area = null;
-  // }
-
   onKeyDown(event) {
     // if (event.key == 'p' && !event.repeat) {
     //   this.showArea('paper');
@@ -163,9 +104,22 @@ class App {
     event.preventDefault();
   }
 
+  onResize(event) {
+    // if (this.resizeTimerId) clearTimeout(this.resizeTimerId);
+    if (!this.resizeTimerId) {
+      this.resizeTimerId = setTimeout(() => {
+        this.paper.setSize(window.innerWidth, window.innerHeight);
+        this.resizeTimerId = null;
+      }, 100);
+    }
+  }
+
   handleEvent(event) {
     if (event.type == 'contextmenu') {
       this.onContextMenu(event);
+    }
+    else if (event.type == 'resize') {
+      this.onResize(event);
     }
     else {
       if (this.editor) {
