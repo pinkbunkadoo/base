@@ -9,6 +9,7 @@ import Sequence from '../display/sequence';
 import Editor from '../editor';
 import PointerTool from './tools/pointer_tool';
 import PencilTool from './tools/pencil_tool';
+import Player from './player';
 
 class Paper extends Editor {
   constructor() {
@@ -335,6 +336,17 @@ class Paper extends Editor {
     }
   }
 
+  play() {
+    // console.log('player--');
+    this.player = new Player(this.canvas, this.sequence);
+    this.player.on('done', () => {
+      this.player = null;
+      this.render();
+      // console.log('done');
+    });
+    this.player.play();
+  }
+
   onMouseDown(event) {
   }
 
@@ -354,19 +366,21 @@ class Paper extends Editor {
   }
 
   onKeyDown(event) {
-    if (event.key == 'q' && !event.repeat) {
+    if (event.repeat) return;
+
+    if (event.key == 'q') {
       this.setTool('pointer');
     }
-    else if (event.key == 'b' && !event.repeat) {
+    else if (event.key == 'b') {
       this.setTool('pencil');
     }
-    else if ((event.key == '.' || event.key == '>') && !event.repeat) {
+    else if ((event.key == '.' || event.key == '>')) {
       if (event.shiftKey) {
         this.addFrame(this.frameNo + 1);
       }
       this.goFrame(this.frameNo + 1);
     }
-    else if ((event.key == ',' || event.key == '<') && !event.repeat) {
+    else if ((event.key == ',' || event.key == '<')) {
       if (event.shiftKey) {
         this.addFrame(this.frameNo);
         this.goFrame(this.frameNo);
@@ -374,30 +388,33 @@ class Paper extends Editor {
         this.goFrame(this.frameNo - 1);
       }
     }
-    else if (event.key == 'c' && !event.repeat) {
+    else if (event.key == 'c') {
       if (event.metaKey || event.ctrlKey) {
         this.copySelected();
       }
     }
-    else if (event.key == 'v' && !event.repeat) {
+    else if (event.key == 'v') {
       if (event.metaKey || event.ctrlKey) {
         this.paste();
       }
     }
-    else if (event.key == 'a' && !event.repeat) {
+    else if (event.key == 'a') {
       this.selectAll();
     }
-    else if (event.key == 'x' && !event.repeat) {
+    else if (event.key == 'x') {
       this.deleteSelected();
     }
-    else if (event.key == 'X' && !event.repeat) {
+    else if (event.key == 'X') {
       this.deleteFrame(this.frameNo);
     }
-    else if (event.key == 'ArrowUp' && !event.repeat) {
+    else if (event.key == 'ArrowUp') {
       if (event.metaKey || event.ctrlKey) this.bringToFront();
     }
-    else if (event.key == 'ArrowDown' && !event.repeat) {
+    else if (event.key == 'ArrowDown') {
       if (event.metaKey || event.ctrlKey) this.sendToBack();
+    }
+    else if (event.key == ' ') {
+      this.play();
     }
     // if (event.key == 's' && !event.repeat) {
     //   this.setStroke(this.stroke ? null : 'black')
@@ -437,12 +454,17 @@ class Paper extends Editor {
     else if (event.type == 'dblclick') {
       this.onDblClick(event);
     }
-    else if (event.type == 'keydown') {
-      this.onKeyDown(event);
-    }
 
-    if (this.tool) {
-      this.tool.handleEvent(event);
+    if (this.player) {
+      this.player.handleEvent(event);
+    }
+    else {
+      if (event.type == 'keydown') {
+        this.onKeyDown(event);
+      }
+      if (this.tool) {
+        this.tool.handleEvent(event);
+      }
     }
   }
 }

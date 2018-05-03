@@ -8,10 +8,17 @@ import Text from './display/text';
 class App {
   constructor() {
     this.dom = [];
+    this.paper = new Paper();
   }
 
   init() {
-    this.startup();
+    this.dom.app = document.getElementById('app');
+
+    this.setEditor(this.paper);
+
+    global.paper = this.paper;
+    global.app = this;
+
     this.initEventListeners();
   }
 
@@ -26,15 +33,6 @@ class App {
     window.addEventListener('focus', this);
     window.addEventListener('blur', this);
     window.addEventListener('resize', this);
-  }
-
-  startup() {
-    this.dom.app = document.getElementById('app');
-
-    this.paper = new Paper();
-    this.setEditor(this.paper);
-
-    global.paper = this.paper;
   }
 
   grabPaperShapes() {
@@ -81,6 +79,14 @@ class App {
   }
 
   onKeyDown(event) {
+    if (!event.repeat) {
+      if (event.key == ']') {
+
+      }
+      else if (event.key == ']') {
+
+      }
+    }
     // if (event.key == 'p' && !event.repeat) {
     //   this.showArea('paper');
     // }
@@ -120,18 +126,15 @@ class App {
     else if (event.type == 'resize') {
       this.onResize(event);
     }
-    else {
-      if (this.editor) {
-        this.editor.handleEvent(event);
-      }
-      else {
-        if (event.type == 'keydown') {
-          this.onKeyDown(event);
-        }
-        else if (event.type == 'mousedown') {
-          this.onMouseDown(event);
-        }
-      }
+    else if (event.type == 'keydown') {
+      this.onKeyDown(event);
+    }
+    else if (event.type == 'mousedown') {
+      this.onMouseDown(event);
+    }
+
+    if (this.editor) {
+      this.editor.handleEvent(event);
     }
   }
 }
