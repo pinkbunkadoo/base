@@ -105,7 +105,6 @@ class App {
   }
 
   onResize(event) {
-    // if (this.resizeTimerId) clearTimeout(this.resizeTimerId);
     if (!this.resizeTimerId) {
       this.resizeTimerId = setTimeout(() => {
         this.paper.setSize(window.innerWidth, window.innerHeight);

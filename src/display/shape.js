@@ -8,16 +8,21 @@ class Shape extends Transform {
   constructor(params={}) {
     super();
 
+    this.x = params.x || 0;
+    this.y = params.y || 0;
     this.fill = params.fill || null;
     this.stroke = params.stroke || null;
     this.closed = params.closed || false;
     // this.strokeWidth = params.strokeWidth || 1;
 
-    this.pointList = params.pointList.copy();
+    if (params.pointList)
+      this.pointList = params.pointList.copy();
+    else
+      this.pointList = new PointList();
   }
 
   copy() {
-    return new Shape({ pointList: this.pointList, stroke: this.stroke, fill: this.fill, closed: this.closed });
+    return new Shape({ x: this.x, y: this.y, pointList: this.pointList, stroke: this.stroke, fill: this.fill, closed: this.closed });
   }
 
   getPoints() {

@@ -20,6 +20,7 @@ class Paper extends Editor {
     this.stroke = null;
 
     this.selection = [];
+    this.clipboard = [];
     this.sequence = new Sequence();
 
     this.el = document.createElement('div');
@@ -176,6 +177,14 @@ class Paper extends Editor {
     ctx.fillText((this.frameNo + 1) + ':' + this.sequence.length, 20, 20);
   }
 
+  selectAll() {
+    this.selection = [];
+    for (var i = 0; i < this.frame.shapes.length; i++) {
+      this.selection.push(this.frame.shapes[i]);
+    }
+    this.render();
+  }
+
   screenToWorld(x, y) {
     let tx = this.canvas.width / 2;
     let ty = this.canvas.height / 2;
@@ -196,16 +205,6 @@ class Paper extends Editor {
     return this.shapes;
   }
 
-  // setFill(fill) {
-  //   this.fill = fill;
-  //   this.render();
-  // }
-  //
-  // setStroke(stroke) {
-  //   this.stroke = stroke;
-  //   this.render();
-  // }
-
   setCursor(cursor) {
     if (this.el.contains(this.cursor)) {
       this.el.removeChild(this.cursor);
@@ -221,14 +220,6 @@ class Paper extends Editor {
         this.tool.on('update', () => {
           this.render();
         });
-        // this.tool.on('select', (selection) => {
-          // console.log(point);
-          // this.selection = selection;
-          // this.render();
-        // });
-        // this.tool.on('marquee', (rect) => {
-        //   console.log(rect);
-        // });
       }
       else if (toolName == 'pencil') {
         this.tool = new PencilTool();
@@ -236,7 +227,6 @@ class Paper extends Editor {
           this.render();
         });
         this.tool.on('shape', (shape) => {
-          // this.shapes.push(shape);
           this.addShape(shape);
         });
       }
@@ -251,10 +241,18 @@ class Paper extends Editor {
 
   addFrame(index) {
     let frame = new Frame();
+
     if (index !== undefined)
       this.sequence.add(frame, index);
     else
       this.sequence.add(frame);
+
+    if (this.selection.length) {
+      for (var i = 0; i < this.selection.length; i++) {
+        let shape = this.selection[i].copy();
+        frame.add(shape);
+      }
+    }
   }
 
   clearFrame() {
@@ -273,8 +271,11 @@ class Paper extends Editor {
   }
 
   goFrame(frameNo) {
-    if (frameNo < 0) frameNo = 0;
-    if (frameNo > this.sequence.length - 1) frameNo = this.sequence.length - 1;
+    if (frameNo < 0)
+      frameNo = 0;
+    else if (frameNo > this.sequence.length - 1)
+      frameNo = this.sequence.length - 1;
+
     let frame = this.sequence.getFrame(frameNo);
     if (frame) {
       this.frame = frame;
@@ -291,6 +292,47 @@ class Paper extends Editor {
     }
     this.selection = [];
     this.render();
+  }
+
+  copySelected() {
+    if (this.selection.length) {
+      let clipboard = [];
+      for (var i = 0; i < this.selection.length; i++) {
+        let shape = this.selection[i].copy();
+        clipboard.push(shape);
+      }
+      this.clipboard = clipboard;
+    }
+  }
+
+  paste() {
+    if (this.clipboard.length)  {
+      this.selection = [];
+      for (var i = 0; i < this.clipboard.length; i++) {
+        let shape = this.clipboard[i].copy();
+        this.frame.add(shape);
+        this.selection.push(shape);
+      }
+      this.render();
+    }
+  }
+
+  bringToFront() {
+    if (this.selection.length) {
+      let shapes = this.frame.shapes.filter(shape => !this.selection.includes(shape));
+      let set = this.frame.shapes.filter(shape => this.selection.includes(shape));
+      this.frame.shapes = shapes.concat(set);
+      this.render();
+    }
+  }
+
+  sendToBack() {
+    if (this.selection.length) {
+      let shapes = this.frame.shapes.filter(shape => !this.selection.includes(shape));
+      let set = this.frame.shapes.filter(shape => this.selection.includes(shape));
+      this.frame.shapes = set.concat(shapes);
+      this.render();
+    }
   }
 
   onMouseDown(event) {
@@ -312,7 +354,6 @@ class Paper extends Editor {
   }
 
   onKeyDown(event) {
-    // console.log(event.key, event.shiftKey);
     if (event.key == 'q' && !event.repeat) {
       this.setTool('pointer');
     }
@@ -333,11 +374,30 @@ class Paper extends Editor {
         this.goFrame(this.frameNo - 1);
       }
     }
+    else if (event.key == 'c' && !event.repeat) {
+      if (event.metaKey || event.ctrlKey) {
+        this.copySelected();
+      }
+    }
+    else if (event.key == 'v' && !event.repeat) {
+      if (event.metaKey || event.ctrlKey) {
+        this.paste();
+      }
+    }
+    else if (event.key == 'a' && !event.repeat) {
+      this.selectAll();
+    }
     else if (event.key == 'x' && !event.repeat) {
       this.deleteSelected();
     }
     else if (event.key == 'X' && !event.repeat) {
       this.deleteFrame(this.frameNo);
+    }
+    else if (event.key == 'ArrowUp' && !event.repeat) {
+      if (event.metaKey || event.ctrlKey) this.bringToFront();
+    }
+    else if (event.key == 'ArrowDown' && !event.repeat) {
+      if (event.metaKey || event.ctrlKey) this.sendToBack();
     }
     // if (event.key == 's' && !event.repeat) {
     //   this.setStroke(this.stroke ? null : 'black')

@@ -5,7 +5,6 @@ class Sequence {
   }
 
   add(frame, index) {
-    console.log('sequence.add', index);
     if (index !== undefined)
       this.frames.splice(index, 0, frame);
     else

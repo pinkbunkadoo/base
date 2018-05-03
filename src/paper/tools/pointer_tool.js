@@ -71,6 +71,7 @@ class PointerTool extends Tool {
 
   onMouseDown(event) {
     if (event.button == 0) {
+      let modifier = event.shiftKey || event.metaKey;
       this.downX = event.pageX;
       this.downY = event.pageY;
 
@@ -79,9 +80,16 @@ class PointerTool extends Tool {
       let hit = this.hitTest(this.downX, this.downY);
       if (hit) {
         if (paper.selection.includes(hit)) {
+          if (modifier)
+            paper.selection.splice(paper.selection.indexOf(hit), 1);
+          // else
+            // paper.selection = [hit];
         }
         else {
-          paper.selection = [ hit ];
+          if (modifier)
+            paper.selection.push(hit);
+          else
+            paper.selection = [ hit ];
         }
         this.target = hit;
       } else {
