@@ -1,27 +1,27 @@
 import { Event, EventDispatcher } from '../events';
+import Point from '../geom/point';
 
 class Transform extends EventDispatcher {
   constructor() {
     super();
-    this.x = 0;
-    this.y = 0;
+    this.position = new Point();
   }
 
   get x() {
-    return this._x;
+    return this.position.x;
   }
 
   get y() {
-    return this._y;
+    return this.position.y;
   }
 
   set x(value) {
-    this._x = value;
+    this.position.x = value;
     this.emit('valuechange');
   }
 
   set y(value) {
-    this._y = value;
+    this.position.y = value;
     this.emit('valuechange');
   }
 

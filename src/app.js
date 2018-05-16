@@ -1,23 +1,72 @@
-import svg from './svg';
 import Stage from './stage';
 import Paper from './paper/paper';
-import Shape from './display/shape';
-import Group from './display/group';
+import Library from './library';
 import Text from './display/text';
 
 class App {
   constructor() {
     this.dom = [];
-    this.paper = new Paper();
+    this.editors = [];
+    this.sequences = [];
   }
 
   init() {
+    this.editors.paper = new Paper();
+    this.editors.library = new Library();
+    this.editors.stage = new Stage();
+
+    global.paper = this.editors.paper;
+
     this.dom.app = document.getElementById('app');
 
-    this.setEditor(this.paper);
+    let buttons = document.createElement('div');
+    buttons.classList.add('editor-buttons');
 
-    global.paper = this.paper;
-    global.app = this;
+    let button;
+
+    button = document.createElement('div');
+    button.classList.add('button');
+    button.innerHTML = 'save';
+    button.onclick = () => {
+      this.save();
+    }
+    buttons.appendChild(button);
+
+    button = document.createElement('div');
+    button.classList.add('button');
+    button.innerHTML = 'library';
+    button.onclick = () => {
+      this.setEditor(this.editors.library);
+    }
+    buttons.appendChild(button);
+
+    button = document.createElement('div');
+    button.classList.add('button');
+    button.innerHTML = 'stage';
+    button.onclick = () => {
+      this.setEditor(this.editors.stage);
+    }
+    buttons.appendChild(button);
+
+    button = document.createElement('div');
+    button.classList.add('button');
+    button.innerHTML = 'paper';
+    button.onclick = () => {
+      this.setEditor(this.editors.paper);
+    }
+    buttons.appendChild(button);
+
+    this.dom.app.appendChild(buttons);
+    this.dom.buttons = buttons;
+
+    this.load();
+
+    this.setEditor(this.editors.paper);
+
+    let sequence = new Sequence();
+    sequence.add(new Frame());
+    this.sequences.push(sequence);
+    this.editors.paper.setSequence(sequence);
 
     this.initEventListeners();
   }
@@ -35,34 +84,17 @@ class App {
     window.addEventListener('resize', this);
   }
 
-  grabPaperShapes() {
-    let stageEl = this.stage.dom();
-    let shapes = this.paper.getShapes();
+  save() {
+    let magic = { title: 'hey' };
+    localStorage['magic'] = JSON.stringify(magic);
+    console.log('saved!');
+  }
 
-    if (shapes.length) {
-      let group = new Group();
-      let x = 0;
-      let y = 0;
-      for (var i = 0; i < shapes.length; i++) {
-        let shape = shapes[i];
-        let bounds = shape.getBounds();
-        x += bounds.x + bounds.width / 2;
-        y += bounds.y + bounds.height / 2;
-      }
-      x /= shapes.length;
-      y /= shapes.length;
-
-      group.x = x;
-      group.y = y;
-
-      for (var i = 0; i < shapes.length; i++) {
-        let shape = shapes[i];
-        shape.x += group.x;
-        shape.y += group.y;
-      }
-
-      group.add(shapes);
-      this.stage.add(group);
+  load() {
+    let magic = localStorage['magic'];
+    if (magic) {
+      console.log(JSON.parse(magic));
+      console.log('loaded!');
     }
   }
 
@@ -70,7 +102,7 @@ class App {
     if (editor !== this.editor) {
       if (this.editor) {
         this.editor.hide();
-        this.dom.app.removeChild(this.dom.app.firstChild);
+        this.dom.app.removeChild(this.editor.dom());
       }
       this.editor = editor;
       this.dom.app.appendChild(this.editor.dom());
@@ -87,20 +119,6 @@ class App {
 
       }
     }
-    // if (event.key == 'p' && !event.repeat) {
-    //   this.showArea('paper');
-    // }
-    // else {
-    //
-    // }
-    // else if (event.key == 'e' && !event.repeat) {
-    //   this.stage.edit();
-    // }
-    // else {
-    //   if (this.mode == 'paper') {
-    //     this.paper.handleEvent(event);
-    //   }
-    // }
   }
 
   onMouseDown(event) {
@@ -113,7 +131,7 @@ class App {
   onResize(event) {
     if (!this.resizeTimerId) {
       this.resizeTimerId = setTimeout(() => {
-        this.paper.setSize(window.innerWidth, window.innerHeight);
+        this.editors.paper.setSize(window.innerWidth, window.innerHeight);
         this.resizeTimerId = null;
       }, 100);
     }
@@ -132,7 +150,6 @@ class App {
     else if (event.type == 'mousedown') {
       this.onMouseDown(event);
     }
-
     if (this.editor) {
       this.editor.handleEvent(event);
     }
@@ -142,5 +159,6 @@ class App {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOMContentLoaded');
   let app = new App();
+  global.app = app;
   app.init();
 });

@@ -22,7 +22,7 @@ class Player extends EventDispatcher {
     ctx.fillText(this.playing ? 'Play' : 'Pause', 20, 20);
 
     ctx.font = '16px sans-serif';
-    ctx.fillText(this.frameNo + 1, 100, 100);
+    ctx.fillText(this.frameNo + 1, 100, 20);
 
     let frame = this.sequence.frames[this.frameNo];
 
@@ -40,7 +40,7 @@ class Player extends EventDispatcher {
       for (var j = 0; j < points.length; j++) {
         let p = points[j];
         let x = (p.x + sp.x);
-        let y = (p.y + sp.y);
+        let y = (p.y*-1 + sp.y);
 
         if (j == 0)
           ctx.moveTo(x, y);
@@ -87,6 +87,11 @@ class Player extends EventDispatcher {
     this.render();
   }
 
+  done() {
+    this.pause();
+    this.emit('done');
+  }
+
   toggle() {
     if (this.playing) {
       this.pause();
@@ -97,19 +102,19 @@ class Player extends EventDispatcher {
   }
 
   onKeyDown(event) {
-    if (event.repeat) return;
-
-    if (event.key == ' ') {
-      this.toggle();
-    }
-    else if (event.key == 'Escape') {
-      this.pause();
-      this.emit('done');
+    if (!event.repeat) {
+      if (event.key == ' ' || event.key == 'Escape' || event.key == 'Enter') {
+        this.done();
+      }
     }
   }
 
   onMouseDown(event) {
-    this.toggle();
+    this.done();
+  }
+
+  onBlur(event) {
+    this.done();
   }
 
   handleEvent(event) {
@@ -118,6 +123,9 @@ class Player extends EventDispatcher {
     }
     else if (event.type == 'mousedown') {
       this.onMouseDown(event);
+    }
+    else if (event.type == 'blur') {
+      this.onBlur(event);
     }
   }
 }

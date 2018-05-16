@@ -18,6 +18,14 @@ class Frame {
   clear() {
     this.shapes = [];
   }
+
+  copy() {
+    let frame = new Frame();
+    for (var i = 0; i < this.shapes.length; i++) {
+      frame.add(this.shapes[i].copy());
+    }
+    return frame;
+  }
 }
 
 export default Frame;

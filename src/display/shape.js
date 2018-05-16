@@ -13,7 +13,6 @@ class Shape extends Transform {
     this.fill = params.fill || null;
     this.stroke = params.stroke || null;
     this.closed = params.closed || false;
-    // this.strokeWidth = params.strokeWidth || 1;
 
     if (params.pointList)
       this.pointList = params.pointList.copy();
@@ -22,7 +21,10 @@ class Shape extends Transform {
   }
 
   copy() {
-    return new Shape({ x: this.x, y: this.y, pointList: this.pointList, stroke: this.stroke, fill: this.fill, closed: this.closed });
+    return new Shape({
+      x: this.x, y: this.y, pointList: this.pointList, stroke: this.stroke,
+      fill: this.fill, closed: this.closed
+    });
   }
 
   getPoints() {
@@ -36,29 +38,6 @@ class Shape extends Transform {
     return bounds;
   }
 
-  intersectsRectangle(xmin, ymin, xmax, ymax) {
-    if (xmin > xmax) [xmin, xmax] = [ xmax, xmin ];
-    if (ymin > ymax) [ymin, ymax] = [ ymax, ymin ];
-    let points = this.pointList.points;
-    for (var i = 1; i < points.length; i++) {
-      let p0 = points[i - 1];
-      let p1 = points[i];
-      if (Util.lineIntersectsRectangle(p0.x, p0.y, p1.x, p1.y, xmin - this.x, ymin - this.y, xmax - this.x, ymax - this.y)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  hitTest(x, y) {
-    let points = this.pointList.points;
-    if (this.fill) {
-      return Util.pointInPolygon(points, x - this.x, y - this.y);
-    }
-    else {
-
-    }
-  }
 }
 
 export default Shape;

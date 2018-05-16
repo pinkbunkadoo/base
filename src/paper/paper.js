@@ -1,3 +1,4 @@
+import Util from '../util';
 import Point from '../geom/point';
 import Vector from '../geom/vector';
 import Circle from '../geom/circle';
@@ -7,24 +8,33 @@ import Frame from '../display/frame';
 import Sequence from '../display/sequence';
 
 import Editor from '../editor';
-import PointerTool from './tools/pointer_tool';
+import PathTool from './tools/path_tool';
+import PointTool from './tools/point_tool';
 import PencilTool from './tools/pencil_tool';
 import Player from './player';
+import UndoStack from './undo_stack';
 
 class Paper extends Editor {
   constructor() {
     super();
 
+    this.palette = [
+      '#333333',
+      '#666666',
+      '#999999',
+      '#cccccc',
+      '#ffffff'
+    ];
+
     this.points = [];
     this.shapes = [];
-    this.fill = null;
-    this.stroke = null;
+    this.fill = this.palette[2];
+    this.stroke = this.palette[0];
 
     this.selection = [];
     this.clipboard = [];
     this.sequence = new Sequence();
 
-    this.el = document.createElement('div');
     this.el.classList.add('paper');
 
     this.canvas = document.createElement('canvas');
@@ -33,17 +43,23 @@ class Paper extends Editor {
 
     this.el.appendChild(this.canvas);
 
+    this.el.addEventListener('pointerleave', this);
+    this.el.addEventListener('pointerenter', this);
+
     this.cursorX = 0;
     this.cursorY = 0;
 
     this.addFrame();
     this.goFrame(0);
-
-    this.setTool('pointer');
   }
 
-  dom() {
-    return this.el;
+  show() {
+    super.show();
+    this.setTool('path');
+  }
+
+  hide() {
+    super.hide();
   }
 
   setSize(width, height) {
@@ -52,7 +68,12 @@ class Paper extends Editor {
     this.render();
   }
 
-  drawShape(shape) {
+  setSequence(sequence) {
+    this.sequence = sequence;
+    this.goFrame(0);
+  }
+
+  renderShape(shape) {
     let points = shape.getPoints();
 
     let ctx = this.canvas.getContext('2d');
@@ -68,7 +89,7 @@ class Paper extends Editor {
     for (var j = 0; j < points.length; j++) {
       let p = points[j];
       let x = (p.x + sp.x);
-      let y = (p.y + sp.y);
+      let y = (p.y*-1 + sp.y);
 
       if (j == 0)
         ctx.moveTo(x, y);
@@ -84,7 +105,7 @@ class Paper extends Editor {
     ctx.restore();
   }
 
-  drawOutline(shape, stroke) {
+  renderOutline(shape, stroke) {
     let ctx = this.canvas.getContext('2d');
     ctx.save();
 
@@ -98,7 +119,7 @@ class Paper extends Editor {
     for (var j = 0; j < points.length; j++) {
       let p = points[j];
       let x = (p.x + sp.x);
-      let y = (p.y + sp.y);
+      let y = (p.y*-1 + sp.y);
 
       if (j == 0)
         ctx.moveTo(x, y);
@@ -120,27 +141,11 @@ class Paper extends Editor {
     ctx.translate(0.5, 0.5);
     ctx.beginPath();
     ctx.strokeStyle = 'lightgray';
-    ctx.moveTo(x - size, y);
+    ctx.moveTo(x, y);
     ctx.lineTo(x + size, y);
-    ctx.moveTo(x, y - size);
-    ctx.lineTo(x, y + size);
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - size);
     ctx.stroke();
-    ctx.restore();
-  }
-
-  renderHints() {
-    let ctx = this.canvas.getContext('2d');
-    ctx.save();
-    if (this.selection.length) {
-      ctx.strokeStyle = 'red';
-      for (var i = 0; i < this.selection.length; i++) {
-        let shape = this.selection[i];
-        let p = this.worldToScreen(shape.x, shape.y);
-        ctx.beginPath();
-        ctx.arc(p.x >> 0, p.y >> 0, 3, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
     ctx.restore();
   }
 
@@ -155,16 +160,14 @@ class Paper extends Editor {
       let frame = this.sequence.getFrame(this.frameNo - 1);
       for (let i = 0; i < frame.shapes.length; i++) {
         let shape = frame.shapes[i];
-        this.drawOutline(shape, 'rgb(192, 240, 192)');
+        this.renderOutline(shape, 'rgb(192, 240, 192)');
       }
     }
 
     for (let i = 0; i < this.frame.shapes.length; i++) {
       let shape = this.frame.shapes[i];
-      this.drawShape(shape);
+      this.renderShape(shape);
     }
-
-    this.renderHints();
 
     if (this.tool) {
       ctx.save();
@@ -176,6 +179,35 @@ class Paper extends Editor {
     ctx.font = '18px sans-serif';
     ctx.fillStyle = 'black';
     ctx.fillText((this.frameNo + 1) + ':' + this.sequence.length, 20, 20);
+
+    // let vec1 = new Vector(120, 150);
+    // let vec2 = new Vector(this.cursorX, this.cursorY);
+    // let vec3 = vec2.project(vec1) || new Vector();
+    //
+    // ctx.beginPath();
+    // ctx.moveTo(0, 0);
+    // ctx.lineTo(vec1.x, vec1.y);
+    // ctx.strokeStyle = 'blue';
+    // ctx.stroke();
+    //
+    // ctx.beginPath();
+    // ctx.moveTo(0, 0);
+    // ctx.lineTo(vec2.x, vec2.y);
+    // ctx.strokeStyle = 'red';
+    // ctx.stroke();
+    //
+    // ctx.beginPath();
+    // ctx.moveTo(0, 0);
+    // ctx.lineTo(vec3.x, vec3.y);
+    // ctx.strokeStyle = 'cyan';
+    // ctx.stroke();
+    //
+    // let p1 = new Point(vec3.x, vec3.y);
+    // let p2 = new Point(vec2.x, vec2.y);
+    // let d = p1.distance(p2);
+    //
+    // ctx.fillText(d, 50, 50);
+
   }
 
   selectAll() {
@@ -186,24 +218,79 @@ class Paper extends Editor {
     this.render();
   }
 
+  selectMarquee(xmin, ymin, xmax, ymax) {
+    let selection = [];
+    for (var i = 0; i < this.frame.shapes.length; i++) {
+      let shape = this.frame.shapes[i];
+      let points = shape.pointList.points;
+      let count = (shape.closed ? points.length + 1 : points.length);
+      for (var j = 1; j < count; j++) {
+        let p0 = points[j - 1];
+        let p1 = (j == points.length ? points[0] : points[j]);
+        let sp0 = paper.worldToScreen(p0.x + shape.x, p0.y + shape.y);
+        let sp1 = paper.worldToScreen(p1.x + shape.x, p1.y + shape.y);
+        if (Util.lineIntersectsRectangle(sp0.x, sp0.y, sp1.x, sp1.y, xmin, ymin, xmax, ymax)) {
+          selection.push(shape);
+          break;
+        }
+      }
+    }
+    this.selection = selection;
+  }
+
   screenToWorld(x, y) {
     let tx = this.canvas.width / 2;
     let ty = this.canvas.height / 2;
-    return new Point(x - tx, y - ty);
+    return new Point(x - tx, (y - ty) * -1);
   }
 
   worldToScreen(x, y) {
     let tx = this.canvas.width / 2;
     let ty = this.canvas.height / 2;
-    return new Point(x + tx, y + ty);
+    return new Point(x + tx, (y*-1 + ty));
   }
 
-  addShape(shape) {
-    this.frame.add(shape);
+  pointInShape(shape, x, y) {
+    let points = shape.getPoints();
+    let sp = this.screenToWorld(x, y);
+    return Util.pointInPolygon(points, sp.x - shape.x, sp.y - shape.y);
   }
 
-  getShapes() {
-    return this.shapes;
+  pointOnShapeLimit(shape, x, y) {
+    let margin = 5;
+    let temp = new Point();
+    let point = this.screenToWorld(x, y);
+    point.subtract(shape.position);
+
+    let points = shape.getPoints();
+    let count = (shape.closed ? points.length + 1 : points.length);
+
+    if (points[0].distance(point) < margin) return points[0];
+
+    for (var i = 1; i < count; i++) {
+      let p1 = points[i-1];
+      let p2 = (i == points.length ? points[0] : points[i]);
+
+      if (p2.distance(point) < margin) return p2;
+
+      let x1 = p2.x - p1.x;
+      let y1 = p2.y - p1.y;
+      let x2 = point.x - p1.x;
+      let y2 = point.y - p1.y;
+
+      let dot = x1 * x1 + y1 * y1;
+      if (dot > 0) {
+        let ratio = (x2 * x1 + y2 * y1) / dot;
+        if (ratio >= 0 && ratio <= 1) {
+          temp.x = (x1 * ratio) + p1.x;
+          temp.y = (y1 * ratio) + p1.y;
+          if (temp.distance(point) < margin) {
+            return { point: temp, index: i };
+          }
+        }
+      }
+    }
+    return null;
   }
 
   setCursor(cursor) {
@@ -212,17 +299,29 @@ class Paper extends Editor {
     }
     this.cursor = cursor;
     this.el.appendChild(this.cursor);
+    this.cursor.style.left = this.cursorX + 'px';
+    this.cursor.style.top = this.cursorY + 'px';
   }
 
   setTool(toolName) {
     if (toolName !== this.toolName) {
-      if (toolName == 'pointer') {
-        this.tool = new PointerTool();
+      if (toolName == 'path') {
+        this.tool = new PathTool();
+        this.tool.on('update', () => {
+          this.render();
+        });
+        this.tool.on('change', () => {
+          this.saveUndo();
+        });
+      }
+      else if (toolName == 'point') {
+        this.tool = new PointTool();
         this.tool.on('update', () => {
           this.render();
         });
       }
       else if (toolName == 'pencil') {
+        this.selection = [];
         this.tool = new PencilTool();
         this.tool.on('update', () => {
           this.render();
@@ -238,6 +337,38 @@ class Paper extends Editor {
       if (this.tool.cursor) this.setCursor(this.tool.cursor);
       this.render();
     }
+  }
+
+  undo() {
+    if (this.undoStack.undo()) {
+      let frame = this.undoStack.current();
+      if (frame) {
+        this.frame.shapes = frame.shapes;
+        this.selection = [];
+        this.render();
+      }
+    }
+  }
+
+  redo() {
+    if (this.undoStack.redo()) {
+      let frame = this.undoStack.current();
+      if (frame) {
+        this.frame.shapes = frame.shapes;
+        this.selection = [];
+        this.render();
+      }
+    }
+  }
+
+  saveUndo() {
+    let frame = this.frame.copy();
+    this.undoStack.push(frame);
+  }
+
+  addShape(shape) {
+    this.frame.add(shape);
+    this.saveUndo();
   }
 
   addFrame(index) {
@@ -256,11 +387,6 @@ class Paper extends Editor {
     }
   }
 
-  clearFrame() {
-    this.frame.clear();
-    this.render();
-  }
-
   deleteFrame(index) {
     if (this.sequence.length == 1) {
       this.clearFrame();
@@ -271,28 +397,38 @@ class Paper extends Editor {
     }
   }
 
+  clearFrame() {
+    this.saveUndo();
+    this.frame.clear();
+    this.render();
+  }
+
   goFrame(frameNo) {
     if (frameNo < 0)
       frameNo = 0;
     else if (frameNo > this.sequence.length - 1)
       frameNo = this.sequence.length - 1;
-
     let frame = this.sequence.getFrame(frameNo);
     if (frame) {
       this.frame = frame;
       this.frameNo = frameNo;
       this.selection = [];
+      this.undoStack = new UndoStack();
+      this.saveUndo();
       this.render();
     }
   }
 
   deleteSelected() {
-    for (var i = 0; i < this.selection.length; i++) {
-      let shape = this.selection[i];
-      this.frame.remove(shape);
+    if (this.selection.length) {
+      for (var i = 0; i < this.selection.length; i++) {
+        let shape = this.selection[i];
+        this.frame.remove(shape);
+      }
+      this.selection = [];
+      this.saveUndo();
+      this.render();
     }
-    this.selection = [];
-    this.render();
   }
 
   copySelected() {
@@ -314,8 +450,27 @@ class Paper extends Editor {
         this.frame.add(shape);
         this.selection.push(shape);
       }
+      this.saveUndo();
       this.render();
     }
+  }
+
+  setFill(fill) {
+    this.fill = fill;
+    for (var i = 0; i < this.selection.length; i++) {
+      let shape = this.selection[i];
+      shape.fill = this.fill;
+    }
+    this.render();
+  }
+
+  setStroke(stroke) {
+    this.stroke = stroke;
+    for (var i = 0; i < this.selection.length; i++) {
+      let shape = this.selection[i];
+      shape.stroke = this.stroke;
+    }
+    this.render();
   }
 
   bringToFront() {
@@ -323,6 +478,7 @@ class Paper extends Editor {
       let shapes = this.frame.shapes.filter(shape => !this.selection.includes(shape));
       let set = this.frame.shapes.filter(shape => this.selection.includes(shape));
       this.frame.shapes = shapes.concat(set);
+      this.saveUndo();
       this.render();
     }
   }
@@ -332,113 +488,142 @@ class Paper extends Editor {
       let shapes = this.frame.shapes.filter(shape => !this.selection.includes(shape));
       let set = this.frame.shapes.filter(shape => this.selection.includes(shape));
       this.frame.shapes = set.concat(shapes);
+      this.saveUndo();
       this.render();
     }
   }
 
   play() {
-    // console.log('player--');
     this.player = new Player(this.canvas, this.sequence);
     this.player.on('done', () => {
       this.player = null;
       this.render();
-      // console.log('done');
     });
     this.player.play();
   }
 
   onMouseDown(event) {
+    this.downX = event.pageX;
+    this.downY = event.pageY;
+    this.down = true;
   }
 
   onMouseUp(event) {
+    this.down = false;
   }
 
   onMouseMove(event) {
     this.cursorX = event.pageX;
     this.cursorY = event.pageY;
+
+    this.deltaX = (this.lastX !== undefined ? this.cursorX - this.lastX : 0);
+    this.deltaY = (this.lastY !== undefined ? this.cursorY - this.lastY : 0);
+
     if (this.cursor) {
       this.cursor.style.left = this.cursorX + 'px';
       this.cursor.style.top = this.cursorY + 'px';
     }
+
+    this.lastX = this.cursorX;
+    this.lastY = this.cursorY;
+
+    // this.render();
   }
 
   onDblClick(event) {
   }
 
   onKeyDown(event) {
-    if (event.repeat) return;
+    let key = event.key;
+    if (!event.repeat) {
+      if (key == 'q') {
+        this.setTool('path');
+      }
+      else if (key == 'e') {
+        this.setTool('point');
+      }
+      else if (key == 'b') {
+        this.setTool('pencil');
+      }
+      else if ((key == '.' || key == '>')) {
+        if (event.shiftKey) {
+          this.addFrame(this.frameNo + 1);
+        }
+        this.goFrame(this.frameNo + 1);
+      }
+      else if ((key == ',' || key == '<')) {
+        if (event.shiftKey) {
+          this.addFrame(this.frameNo);
+          this.goFrame(this.frameNo);
+        } else {
+          this.goFrame(this.frameNo - 1);
+        }
+      }
+      else if (key == 'c') {
+        if (event.metaKey || event.ctrlKey) {
+          this.copySelected();
+        }
+      }
+      else if (key == 'v') {
+        if (event.metaKey || event.ctrlKey) {
+          this.paste();
+        }
+      }
+      else if (key == 'a') {
+        this.selectAll();
+      }
+      else if (key == 'x') {
+        this.deleteSelected();
+      }
+      else if (key == 'X') {
+        this.deleteFrame(this.frameNo);
+      }
+      else if (key == 'z' && event.metaKey) {
+        if (event.shiftKey)
+          this.redo();
+        else
+          this.undo();
+      }
+      else if (key == 'ArrowUp') {
+        if (event.metaKey || event.ctrlKey) this.bringToFront();
+      }
+      else if (key == 'ArrowDown') {
+        if (event.metaKey || event.ctrlKey) this.sendToBack();
+      }
+      else if (key == ' ') {
+        this.play();
+      }
+      else if (key == ')') {
+        this.setStroke(null);
+      }
+      else if (key == '0') {
+        this.setFill(null);
+      }
+      else {
+        let set = ['1', '2', '3', '4', '!', '@', '£', '$'];
+        let index = set.indexOf(key);
+        if (index !== -1) {
+          if (index > 3) {
+            this.setStroke(this.palette[index - 4] || null);
+          }
+          else {
+            this.setFill(this.palette[index] || null);
+          }
+        }
+      }
+    }
+  }
 
-    if (event.key == 'q') {
-      this.setTool('pointer');
-    }
-    else if (event.key == 'b') {
-      this.setTool('pencil');
-    }
-    else if ((event.key == '.' || event.key == '>')) {
-      if (event.shiftKey) {
-        this.addFrame(this.frameNo + 1);
-      }
-      this.goFrame(this.frameNo + 1);
-    }
-    else if ((event.key == ',' || event.key == '<')) {
-      if (event.shiftKey) {
-        this.addFrame(this.frameNo);
-        this.goFrame(this.frameNo);
-      } else {
-        this.goFrame(this.frameNo - 1);
-      }
-    }
-    else if (event.key == 'c') {
-      if (event.metaKey || event.ctrlKey) {
-        this.copySelected();
-      }
-    }
-    else if (event.key == 'v') {
-      if (event.metaKey || event.ctrlKey) {
-        this.paste();
-      }
-    }
-    else if (event.key == 'a') {
-      this.selectAll();
-    }
-    else if (event.key == 'x') {
-      this.deleteSelected();
-    }
-    else if (event.key == 'X') {
-      this.deleteFrame(this.frameNo);
-    }
-    else if (event.key == 'ArrowUp') {
-      if (event.metaKey || event.ctrlKey) this.bringToFront();
-    }
-    else if (event.key == 'ArrowDown') {
-      if (event.metaKey || event.ctrlKey) this.sendToBack();
-    }
-    else if (event.key == ' ') {
-      this.play();
-    }
-    // if (event.key == 's' && !event.repeat) {
-    //   this.setStroke(this.stroke ? null : 'black')
-    // }
-    // else if (event.key == '0' && !event.repeat) {
-    //   this.setFill(null);
-    // }
-    // else if (['1', '2', '3', '4'].includes(event.key) && !event.repeat) {
-    //   let color = COLORS[parseInt(event.key) - 1];
-    //   if (color !== undefined)
-    //     this.setFill(color);
-    // }
-    // else {
-    //   if (this.mode == 'draw') {
-    //     if (event.key == 'Escape' && !event.repeat) {
-    //       this.cancelPath();
-    //     }
-    //     else if (event.key == 'Enter' && !event.repeat) {
-    //       this.closePath();
-    //     }
-    //   }
-    //   else {
-    //   }
-    // }
+  onBlur(event) {
+
+  }
+
+  onPointerEnter(event) {
+    this.cursor.style.display = 'block';
+  }
+
+  onPointerLeave(event) {
+    this.cursor.style.display = 'none';
   }
 
   handleEvent(event) {
@@ -453,6 +638,15 @@ class Paper extends Editor {
     }
     else if (event.type == 'dblclick') {
       this.onDblClick(event);
+    }
+    else if (event.type == 'blur') {
+      this.onBlur(event);
+    }
+    else if (event.type == 'pointerenter') {
+      this.onPointerEnter(event);
+    }
+    else if (event.type == 'pointerleave') {
+      this.onPointerLeave(event);
     }
 
     if (this.player) {

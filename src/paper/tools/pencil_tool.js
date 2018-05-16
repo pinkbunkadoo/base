@@ -7,8 +7,8 @@ class PencilTool extends Tool {
   constructor(params={}) {
     super();
     this.points = [];
-    this.stroke = 'gray';
-    this.fill = 'lightgray';
+    this.stroke = 0;
+    this.fill = 0;
 
     this.cursor = document.createElement('div');
     this.cursor.classList.add('pencil-cursor');
@@ -18,23 +18,29 @@ class PencilTool extends Tool {
     if (this.points.length > 1) {
       let pointList = new PointList(this.points);
       let bounds = pointList.getBounds();
-      let x = bounds.x + bounds.width / 2;
-      let y = bounds.y + bounds.height / 2;
-      for (var i = 0; i < pointList.points.length; i++) {
-        let p = pointList.points[i];
-        p.x -= x;
-        p.y -= y;
+      let wp = paper.screenToWorld(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+      let points = pointList.points;
+
+      for (var i = 0; i < points.length; i++) {
+        let p = points[i];
+        let pp = paper.screenToWorld(p.x, p.y);
+        p.x = pp.x - wp.x;
+        p.y = pp.y - wp.y;
       }
-      let shape = new Shape({ pointList: pointList, fill: this.fill, stroke: this.stroke, closed: closed });
-      let p = paper.screenToWorld(x, y);
-      shape.x = p.x;
-      shape.y = p.y;
+
+      let shape = new Shape({ x: wp.x, y: wp.y, pointList: pointList,
+        fill: paper.fill, stroke: paper.stroke, closed: closed });
       this.emit('shape', shape);
       this.points = [];
     }
   }
 
-  drawPath(ctx, points, stroke, fill, closed=false) {
+  cancelPath() {
+    this.points = [];
+    this.emit('update');
+  }
+
+  renderPath(ctx, points, stroke, fill, closed=false) {
     ctx.strokeStyle = stroke !== undefined ? (stroke ? stroke : 'transparent') : 'transparent';
     ctx.fillStyle = fill !== undefined ? (fill ? fill : 'transparent') : 'transparent';
 
@@ -58,7 +64,7 @@ class PencilTool extends Tool {
 
   render(ctx) {
     if (this.points.length) {
-      this.drawPath(ctx, this.points, this.stroke, this.fill);
+      this.renderPath(ctx, this.points, paper.stroke, paper.fill);
 
       ctx.strokeStyle = 'blue';
       ctx.beginPath();
@@ -92,11 +98,18 @@ class PencilTool extends Tool {
       else {
         this.points.push(p);
       }
-      this.emit('update');
     }
+    else {
+      if (event.button == 2) {
+        this.closePath();
+      }
+    }
+    this.emit('update');
   }
 
-  onMouseUp(event) {}
+  onMouseUp(event) {
+
+  }
 
   onMouseMove(event) {
     this.cursorX = event.offsetX;
@@ -108,7 +121,20 @@ class PencilTool extends Tool {
     this.closePath();
   }
 
-  onKeyDown(event) {}
+  onKeyDown(event) {
+    if (!event.repeat) {
+      if (event.key == 'Escape') {
+        this.cancelPath();
+      }
+      else if (event.key == 'Enter') {
+        this.closePath();
+      }
+    }
+  }
+
+  onBlur(event) {
+    this.cancelPath();
+  }
 
   handleEvent(event) {
     if (event.type == 'mousedown') {
@@ -125,6 +151,9 @@ class PencilTool extends Tool {
     }
     else if (event.type == 'keydown') {
       this.onKeyDown(event);
+    }
+    else if (event.type == 'blur') {
+      this.onBlur(event);
     }
   }
 }
