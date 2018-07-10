@@ -11,6 +11,7 @@ import Editor from '../editor';
 import PathTool from './tools/path_tool';
 import PointTool from './tools/point_tool';
 import PencilTool from './tools/pencil_tool';
+import TriangleTool from './tools/triangle_tool';
 import Player from './player';
 import UndoStack from './undo_stack';
 
@@ -19,6 +20,7 @@ class Paper extends Editor {
     super();
 
     this.palette = [
+      '#000000',
       '#333333',
       '#666666',
       '#999999',
@@ -29,7 +31,7 @@ class Paper extends Editor {
     this.points = [];
     this.shapes = [];
     this.fill = this.palette[2];
-    this.stroke = this.palette[0];
+    this.stroke = null; //this.palette[0];
 
     this.selection = [];
     this.clipboard = [];
@@ -40,6 +42,7 @@ class Paper extends Editor {
     this.canvas = document.createElement('canvas');
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
+    this.setSize(window.innerWidth, window.innerHeight);
 
     this.el.appendChild(this.canvas);
 
@@ -51,6 +54,8 @@ class Paper extends Editor {
 
     this.addFrame();
     this.goFrame(0);
+
+    this.initialised = true;
   }
 
   show() {
@@ -63,9 +68,14 @@ class Paper extends Editor {
   }
 
   setSize(width, height) {
+    this.width = width;
+    this.height = height;
     this.canvas.width = width;
     this.canvas.height = height;
-    this.render();
+
+    if (this.initialised) this.render();
+
+
   }
 
   setSequence(sequence) {
@@ -110,7 +120,6 @@ class Paper extends Editor {
     ctx.save();
 
     ctx.strokeStyle = stroke || 'black';
-
     ctx.beginPath();
 
     let sp = this.worldToScreen(shape.x, shape.y);
@@ -130,7 +139,6 @@ class Paper extends Editor {
     if (shape.closed) ctx.closePath();
 
     ctx.stroke();
-
     ctx.restore();
   }
 
@@ -180,34 +188,16 @@ class Paper extends Editor {
     ctx.fillStyle = 'black';
     ctx.fillText((this.frameNo + 1) + ':' + this.sequence.length, 20, 20);
 
-    // let vec1 = new Vector(120, 150);
-    // let vec2 = new Vector(this.cursorX, this.cursorY);
-    // let vec3 = vec2.project(vec1) || new Vector();
-    //
-    // ctx.beginPath();
-    // ctx.moveTo(0, 0);
-    // ctx.lineTo(vec1.x, vec1.y);
-    // ctx.strokeStyle = 'blue';
-    // ctx.stroke();
-    //
-    // ctx.beginPath();
-    // ctx.moveTo(0, 0);
-    // ctx.lineTo(vec2.x, vec2.y);
-    // ctx.strokeStyle = 'red';
-    // ctx.stroke();
-    //
-    // ctx.beginPath();
-    // ctx.moveTo(0, 0);
-    // ctx.lineTo(vec3.x, vec3.y);
-    // ctx.strokeStyle = 'cyan';
-    // ctx.stroke();
-    //
-    // let p1 = new Point(vec3.x, vec3.y);
-    // let p2 = new Point(vec2.x, vec2.y);
-    // let d = p1.distance(p2);
-    //
-    // ctx.fillText(d, 50, 50);
+    ctx.textBaseline = 'top';
+    ctx.font = '18px sans-serif';
+    ctx.fillStyle = 'black';
+    ctx.fillText(this.toolName, 20, this.canvas.height - 32);
 
+    ctx.fillStyle = this.fill || 'red';
+    ctx.fillRect(100, 20, 20, 20);
+
+    ctx.fillStyle = this.stroke || 'red';
+    ctx.fillRect(140, 20, 20, 20);
   }
 
   selectAll() {
@@ -330,11 +320,21 @@ class Paper extends Editor {
           this.addShape(shape);
         });
       }
+      else if (toolName == 'triangle') {
+        this.tool = new TriangleTool();
+        this.tool.on('update', () => {
+          this.render();
+        });
+        this.tool.on('shape', (shape) => {
+          this.addShape(shape);
+        });
+      }
       else {
         return;
       }
       this.toolName = toolName;
-      if (this.tool.cursor) this.setCursor(this.tool.cursor);
+      // console.log(this.toolName);
+      this.setCursor(this.tool.getCursor());
       this.render();
     }
   }
@@ -527,7 +527,18 @@ class Paper extends Editor {
     this.lastX = this.cursorX;
     this.lastY = this.cursorY;
 
-    // this.render();
+    if (this.initialised) {
+      // let ctx = this.canvas.getContext('2d');
+      // let imageData = ctx.getImageData(0, 0, this.width, this.height);
+      // let pixels = imageData.data;
+      // let offset = this.cursorY * this.width + this.cursorX;
+      // if (pixels[offset*4] <= 16) {
+      //   this.cursor.style.filter = 'invert(100%)';
+      // }
+      // else {
+      //   this.cursor.style.filter = 'none';
+      // }
+    }
   }
 
   onDblClick(event) {
@@ -544,6 +555,9 @@ class Paper extends Editor {
       }
       else if (key == 'b') {
         this.setTool('pencil');
+      }
+      else if (key == 't') {
+        this.setTool('triangle');
       }
       else if ((key == '.' || key == '>')) {
         if (event.shiftKey) {
@@ -600,15 +614,16 @@ class Paper extends Editor {
         this.setFill(null);
       }
       else {
-        let set = ['1', '2', '3', '4', '!', '@', '£', '$'];
+        let set = ['1', '2', '3', '4', '5', '6', '!', '@', '£', '$', '%', '^'];
         let index = set.indexOf(key);
         if (index !== -1) {
-          if (index > 3) {
-            this.setStroke(this.palette[index - 4] || null);
+          if (index > 5) {
+            this.setStroke(this.palette[index - 6] || null);
           }
           else {
             this.setFill(this.palette[index] || null);
           }
+          this.render();
         }
       }
     }

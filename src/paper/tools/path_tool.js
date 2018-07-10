@@ -7,8 +7,35 @@ import Shape from '../../display/shape';
 class PathTool extends Tool {
   constructor() {
     super();
-    this.cursor = document.createElement('div');
-    this.cursor.classList.add('pointer-cursor');
+    // this.cursor = document.createElement('div');
+    // this.cursor.classList.add('path-cursor');
+  }
+
+  getCursor() {
+    let ctx = this.cursor.getContext('2d');
+    ctx.save();
+    ctx.fillStyle = 'black';
+    ctx.strokeStyle = 'white';
+    // ctx.fillRect(0, 0, this.cursor.width, this.cursor.height);
+    ctx.translate(0.5, 0.5);
+    ctx.beginPath();
+    ctx.moveTo(1, 1);
+    ctx.lineTo(9, 1);
+    ctx.lineTo(1, 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    let el = document.createElement('div');
+    el.style.position = 'absolute';
+    // el.style.border = '1px solid black';
+    // el.style.backgroundColor = 'red';
+    // el.style.width = '16px';
+    // el.style.height = '16px';
+    // el.style.zIndex = 9000;
+    el.appendChild(this.cursor);
+    return el;
   }
 
   update() {

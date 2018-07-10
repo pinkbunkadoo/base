@@ -62,7 +62,7 @@ html body {
   overflow: hidden;
 }
 
-.paper-cursor {
+/* .paper-cursor {
   position: absolute;
   background-color: rgba(0, 0, 0, 0.2);
   width: 4px;
@@ -71,16 +71,18 @@ html body {
   margin-top: -2px;
   cursor: none;
   pointer-events: none;
-}
+} */
 
-.pointer-cursor {
+.path-cursor {
   position: absolute;
   width: 4px;
   height: 4px;
-  border-left: 1px solid black;
-  border-top: 1px solid black;
+  border-left: 2px solid black;
+  border-top: 2px solid black;
   cursor: none;
   pointer-events: none;
+  box-shadow: 1px 1px 1px white;
+  /* filter: none; */
 }
 
 .point-cursor {

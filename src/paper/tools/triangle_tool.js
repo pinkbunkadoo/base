@@ -3,7 +3,7 @@ import PointList from '../../geom/point_list';
 import Shape from '../../display/shape';
 import Tool from './tool';
 
-class PencilTool extends Tool {
+class TriangleTool extends Tool {
   constructor(params={}) {
     super();
     this.points = [];
@@ -15,7 +15,7 @@ class PencilTool extends Tool {
   }
 
   closePath(closed=false) {
-    if (this.points.length > 1) {
+    if (this.points.length == 3) {
       let pointList = new PointList(this.points);
       let bounds = pointList.getBounds();
       let wp = paper.screenToWorld(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
@@ -30,9 +30,10 @@ class PencilTool extends Tool {
 
       let shape = new Shape({ x: wp.x, y: wp.y, pointList: pointList,
         fill: paper.fill, stroke: paper.stroke, closed: closed });
+
       this.emit('shape', shape);
-      this.points = [];
     }
+    this.points = [];
   }
 
   cancelPath() {
@@ -44,7 +45,7 @@ class PencilTool extends Tool {
     ctx.strokeStyle = stroke !== undefined ? (stroke ? stroke : 'transparent') : 'transparent';
     ctx.fillStyle = fill !== undefined ? (fill ? fill : 'transparent') : 'transparent';
 
-    if (points.length <= 2 && stroke == null) {
+    if (stroke == null) {
       ctx.strokeStyle = 'cyan';
     }
 
@@ -78,7 +79,7 @@ class PencilTool extends Tool {
 
       if (cp.distance(p0) < 5) {
         ctx.beginPath();
-        ctx.arc(p0.x, p0.y, 3, 0, Math.PI * 2);
+        ctx.arc(p0.x, p0.y, 5, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
@@ -87,28 +88,24 @@ class PencilTool extends Tool {
   onMouseDown(event) {
     if (event.button == 0) {
       let p = new Point(event.offsetX, event.offsetY);
-      if (this.points.length) {
-        if (p.distance(this.points[0]) < 5) {
-          this.closePath(true);
-        }
-        else {
-          this.points.push(p);
-        }
+      this.points.push(p);
+      // console.log(this.points.length);
+      if (this.points.length == 3) {
+        this.closePath(true);
       }
-      else {
-        this.points.push(p);
-      }
-    }
-    else {
-      if (event.button == 2) {
-        this.closePath();
-      }
+      // console.log('down', p);
     }
     this.emit('update');
   }
 
   onMouseUp(event) {
-
+    if (event.button == 0) {
+      if (this.points.length == 1) {
+        let p = new Point(event.offsetX, event.offsetY);
+        this.points.push(p);
+      }
+      // console.log('up');
+    }
   }
 
   onMouseMove(event) {
@@ -158,4 +155,4 @@ class PencilTool extends Tool {
   }
 }
 
-export default PencilTool;
+export default TriangleTool;

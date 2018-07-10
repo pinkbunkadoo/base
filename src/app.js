@@ -2,6 +2,8 @@ import Stage from './stage';
 import Paper from './paper/paper';
 import Library from './library';
 import Text from './display/text';
+import Sequence from './display/sequence';
+import Frame from './display/frame';
 
 class App {
   constructor() {
